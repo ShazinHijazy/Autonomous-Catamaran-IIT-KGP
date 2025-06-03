@@ -60,8 +60,8 @@ The aim of this project is to establish a foundational control layer for a marit
 
 2. Clone this repository:
    ```bash
-   git clone https://github.com/your-username/thruster-control-catamaran.git
-   cd thruster-control-catamaran
+   git clone https://github.com/ShazinHijazy/Autonomous-Catamaran-IIT-KGP.git
+   cd Autonomous-Catamaran-IIT-KGP
    ```
 
 3. Install dependencies:
@@ -86,12 +86,12 @@ The aim of this project is to establish a foundational control layer for a marit
 
 This project was developed by:
 
-- Mohamed Hijazy Shazin Hassan  
+- **Mohamed Hijazy Shazin Hassan**  
   B.Tech CSE, A1-3/4  
   Department of Computer Science and Systems Engineering  
   Andhra University
 
-- Bobbadi Jaswanth Kumar  
+- **Bobbadi Jaswanth Kumar**  
   B.Tech CSE, 2/6  
   Department of Computer Science and Systems Engineering  
   Andhra University
@@ -100,14 +100,14 @@ This project was developed by:
 
 This work was carried out under the guidance of:
 
-- Prof. K. Lakshmi Vasudev  
+- **Prof. K. Lakshmi Vasudev**  
   Assistant Professor  
   Department of Ocean Engineering and Naval Architecture  
   Andhra University
 
 With technical mentorship from:
 
-- Mr. Sharad Kumar  
+- **Mr. Sharad Kumar**  
   Department of Ocean Engineering and Naval Architecture  
   Indian Institute of Technology Kharagpur (IIT KGP)
 
