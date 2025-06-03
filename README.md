@@ -1,8 +1,6 @@
 # 🚤 Autonomous Catamaran Project
 
-This project is focused on the development of an autonomous catamaran platform powered by Raspberry Pi and Blue Robotics T100 thrusters. It is designed for research, environmental monitoring, and educational demonstrations of marine autonomy.
-
-# Autonomous surface vehicle powered by Raspberry Pi, T100 thrusters, and onboard sensors with remote and autonomous control modes.
+Autonomous surface vehicle powered by Raspberry Pi, T100 thrusters, and onboard sensors with remote and autonomous control modes.
 
 This repository contains the software and system integration code for an autonomous catamaran developed using a Raspberry Pi 3B, Blue Robotics T100 thrusters, electronic speed controllers (ESCs), and a modular sensor suite. The vessel is capable of manual keyboard-based remote operation and is being expanded to support full autonomy using IMU, GPS, and navigation logic.
 
