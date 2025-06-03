@@ -1,4 +1,6 @@
-# Autonomous-Catamaran-IIT-KGP
+# 🚤 Autonomous Catamaran Project
+
+This project is focused on the development of an autonomous catamaran platform powered by Raspberry Pi and Blue Robotics T100 thrusters. It is designed for research, environmental monitoring, and educational demonstrations of marine autonomy.
 
 # Autonomous surface vehicle powered by Raspberry Pi, T100 thrusters, and onboard sensors with remote and autonomous control modes.
 
