@@ -1,0 +1,9 @@
+<package format="3">
+  <name>catamaran_thruster_control</name>
+  <version>0.1.0</version>
+  <description>ROS 2 package for catamaran thruster control</description>
+  <maintainer email="your@email.com">Your Name</maintainer>
+  <license>MIT</license>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+</package>
