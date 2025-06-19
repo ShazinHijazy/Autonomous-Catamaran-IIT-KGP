@@ -55,8 +55,8 @@ class CustomTeleop(Node):
         key_map = {
             'w': (1.0, 0.0, 'Forward'),
             's': (-1.0, 0.0, 'Reverse'),
-            'a': (0.0, 1.0, 'Spin Right (CW)'),
-            'd': (0.0, -1.0, 'Spin Left (CCW)'),
+            'd': (0.0, 1.0, 'Spin Right (CW)'),
+            'a': (0.0, -1.0, 'Spin Left (CCW)'),
             'e': (1.0, 1.0, 'Forward + Right Arc'),
             'q': (1.0, -1.0, 'Forward + Left Arc'),
             'c': (-1.0, 1.0, 'Reverse + Right Arc'),
