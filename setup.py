@@ -8,10 +8,11 @@ setup(
     packages=[package_name],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='Your Name',
-    maintainer_email='your@email.com',
-    description='Custom teleop for ROS 2 catamaran',
-    license='Apache License 2.0',
+    maintainer='Jaswanth',
+    maintainer_email='jaswanth@ubuntu-22',
+    description='Custom ROS 2 teleop with speed control, HUD, and logging for catamaran control',
+    license='MITApache License 2.0',
+    tests_require=['pytest'],
     entry_points={
         'console_scripts': [
             'custom_teleop = catamaran_thruster_control.custom_teleop:main',
