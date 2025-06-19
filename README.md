@@ -103,6 +103,11 @@ This work was carried out under the guidance of:
 - **Prof. K. Lakshmi Vasudev**  
   Assistant Professor  
   Department of Ocean Engineering and Naval Architecture  
+  Indian Institute of Technology Kharagpur (IIT KGP)
+
+- **Prof. Giri Rajasekhar Gunnu**  
+  Professor of  Practice 
+  Department of Marine Engineering and Naval Architecture  
   Andhra University
 
 With technical mentorship from:
