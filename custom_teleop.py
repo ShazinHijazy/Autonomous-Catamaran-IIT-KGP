@@ -57,8 +57,8 @@ class CustomTeleop(Node):
             's': (-1.0, 0.0, 'Reverse'),
             'a': (0.0, 1.0, 'Spin Right (CW)'),
             'd': (0.0, -1.0, 'Spin Left (CCW)'),
-            'q': (1.0, 1.0, 'Forward + Right Arc'),
-            'e': (1.0, -1.0, 'Forward + Left Arc'),
+            'e': (1.0, 1.0, 'Forward + Right Arc'),
+            'q': (1.0, -1.0, 'Forward + Left Arc'),
             'c': (-1.0, 1.0, 'Reverse + Right Arc'),
             'z': (-1.0, -1.0, 'Reverse + Left Arc'),
             ' ': (0.0, 0.0, 'Stop')
