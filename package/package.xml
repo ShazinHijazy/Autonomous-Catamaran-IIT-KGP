@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<package format="3">
+  <!-- Name of the ROS 2 package -->
+  <name>catamaran_sensors</name>
+
+  <!-- Version number -->
+  <version>0.1.0</version>
+
+  <!-- Short description -->
+  <description>ROS 2 Humble package integrating sensor nodes for the autonomous catamaran system.</description>
+
+  <!-- Maintainer info -->
+  <maintainer email="shazhijazy@gmail.com">Shazin</maintainer>
+
+  <!-- License (e.g., MIT, Apache 2.0, BSD) -->
+  <license>Apache 2.0</license>
+
+  <!-- Dependencies needed to build the package -->
+  <buildtool_depend>ament_python</buildtool_depend>
+  <build_depend>rclpy</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>std_msgs</build_depend>
+
+  <!-- Dependencies needed to run the package -->
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+
+  <!-- Launch-related dependencies -->
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+
+  <!-- Testing (optional, used during CI/dev) -->
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <!-- Tell the build system this is a Python package -->
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
