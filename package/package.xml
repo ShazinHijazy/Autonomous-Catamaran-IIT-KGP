@@ -1,41 +1,53 @@
 <?xml version="1.0"?>
 <package format="3">
-  <!-- Name of the ROS 2 package -->
-  <name>catamaran_sensors</name>
+  <name>autonomous_catamaran</name>
+  <version>1.0.0</version>
+  <description>ROS 2 Humble package for complete autonomous navigation and control of an unmanned surface vehicle (USV) with integrated sensors, thruster control, and obstacle avoidance.</description>
 
-  <!-- Version number -->
-  <version>0.1.0</version>
+  <maintainer email="shazhijazy@gmail.com">Shazin Hijazy</maintainer>
+  <license>Apache-2.0</license>
 
-  <!-- Short description -->
-  <description>ROS 2 Humble package integrating sensor nodes for the autonomous catamaran system.</description>
-
-  <!-- Maintainer info -->
-  <maintainer email="shazhijazy@gmail.com">Shazin</maintainer>
-
-  <!-- License (e.g., MIT, Apache 2.0, BSD) -->
-  <license>Apache 2.0</license>
-
-  <!-- Dependencies needed to build the package -->
+  <!-- Build tools -->
+  <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>ament_python</buildtool_depend>
-  <build_depend>rclpy</build_depend>
-  <build_depend>sensor_msgs</build_depend>
-  <build_depend>std_msgs</build_depend>
 
-  <!-- Dependencies needed to run the package -->
-  <exec_depend>rclpy</exec_depend>
-  <exec_depend>sensor_msgs</exec_depend>
-  <exec_depend>std_msgs</exec_depend>
+  <!-- Core ROS 2 dependencies -->
+  <depend>rclpy</depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf_transformations</depend>
+  <depend>builtin_interfaces</depend>
 
-  <!-- Launch-related dependencies -->
-  <exec_depend>launch</exec_depend>
-  <exec_depend>launch_ros</exec_depend>
+  <!-- Sensor and hardware-specific drivers -->
+  <depend>phidgets_spatial</depend>          <!-- IMU -->
+  <depend>rplidar_ros</depend>               <!-- LiDAR -->
+  <depend>nmea_navsat_driver</depend>        <!-- GNSS -->
 
-  <!-- Testing (optional, used during CI/dev) -->
-  <test_depend>ament_lint_auto</test_depend>
-  <test_depend>ament_lint_common</test_depend>
+  <!-- Navigation stack -->
+  <depend>nav2_bringup</depend>
+  <depend>nav2_msgs</depend>
+  <depend>slam_toolbox</depend>
+  <depend>robot_localization</depend>
 
-  <!-- Tell the build system this is a Python package -->
+  <!-- Teleoperation -->
+  <depend>teleop_twist_keyboard</depend>
+
+  <!-- Launch system -->
+  <depend>launch</depend>
+  <depend>launch_ros</depend>
+
+  <!-- Visualization -->
+  <depend>rviz2</depend>
+
+  <!-- Diagnostics -->
+  <depend>diagnostic_updater</depend>
+
+  <!-- Export -->
   <export>
     <build_type>ament_python</build_type>
   </export>
 </package>
+
