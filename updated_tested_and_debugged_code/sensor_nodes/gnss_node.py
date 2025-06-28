@@ -7,7 +7,7 @@ from DFRobot_GNSS import DFRobot_GNSS_I2C
 class GNSSI2CNode(Node):
     def __init__(self):
         super().__init__('gnss_i2c_node')
-        self.gnss = DFRobot_GNSS_I2C(1, 0x10)  # Bus 1, address 0x10
+        self.gnss = DFRobot_GNSS_I2C(1, 0x66)  # Bus 1, address 0x66
         self.gnss.begin()
         self.fix_pub = self.create_publisher(NavSatFix, 'fix', 10)
         self.timer = self.create_timer(1.0, self.timer_callback)  # 1Hz
