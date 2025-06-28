@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<robot name="catamaran_ros">
+
+  <!-- Deck: a very thin box, acting as a 2D bridge -->
+  <link name="deck">
+    <visual>
+      <geometry>
+        <box size="2.35 0.92 0.01"/>
+      </geometry>
+      <origin xyz="0 0 0.21" rpy="0 0 0"/>
+      <material name="Gray">
+        <color rgba="0.7 0.7 0.7 1"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="2.35 0.92 0.01"/>
+      </geometry>
+      <origin xyz="0 0 0.21" rpy="0 0 0"/>
+    </collision>
+  </link>
+
+  <!-- Left hull (full cylinder, approximating semi-cylinder) -->
+  <link name="left_hull">
+    <visual>
+      <geometry>
+        <cylinder length="2.35" radius="0.2"/>
+      </geometry>
+      <!-- Cylinder's axis is Z by default; rotate to X -->
+      <origin xyz="0 0.26 0" rpy="0 1.5708 0"/>
+      <material name="Blue">
+        <color rgba="0.2 0.2 0.8 1"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder length="2.35" radius="0.2"/>
+      </geometry>
+      <origin xyz="0 0.26 0" rpy="0 1.5708 0"/>
+    </collision>
+  </link>
+
+  <!-- Right hull (full cylinder, approximating semi-cylinder) -->
+  <link name="right_hull">
+    <visual>
+      <geometry>
+        <cylinder length="2.35" radius="0.2"/>
+      </geometry>
+      <origin xyz="0 -0.26 0" rpy="0 1.5708 0"/>
+      <material name="Blue">
+        <color rgba="0.2 0.2 0.8 1"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder length="2.35" radius="0.2"/>
+      </geometry>
+      <origin xyz="0 -0.26 0" rpy="0 1.5708 0"/>
+    </collision>
+  </link>
+
+  <!-- Fixed joints: attach hulls to deck -->
+  <joint name="left_hull_joint" type="fixed">
+    <parent link="deck"/>
+    <child link="left_hull"/>
+    <origin xyz="0 0.26 -0.21" rpy="0 0 0"/>
+  </joint>
+
+  <joint name="right_hull_joint" type="fixed">
+    <parent link="deck"/>
+    <child link="right_hull"/>
+    <origin xyz="0 -0.26 -0.21" rpy="0 0 0"/>
+  </joint>
+
+</robot>
