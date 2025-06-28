@@ -4,10 +4,14 @@ from launch_ros.actions import Node
 def generate_launch_description():
     return LaunchDescription([
         Node(
-            package='catamaran_sensors',
+            package='autonomous_catamaran',
             executable='gnss_node',
             name='gnss_node',
             output='screen',
-            remappings=[('/fix', '/catamaran/gnss/fix')]
+            parameters=[],
+            remappings=[
+                # Optional: remap if needed
+                # ('fix', '/gps/fix')
+            ]
         )
     ])

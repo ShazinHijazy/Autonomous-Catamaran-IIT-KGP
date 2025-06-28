@@ -15,8 +15,8 @@ class ReturnToBaseNode(Node):
 
         # Parameters
         self.heartbeat_timeout_sec = 10.0
-        self.return_lat = 17.6868    # Example: Replace with base latitude
-        self.return_lon = 83.2185    # Example: Replace with base longitude
+        self.return_lat = 22.32053863349553    # Example: Replace with base latitude
+        self.return_lon = 87.31603140643492    # Example: Replace with base longitude
 
         # State variables
         self.last_heartbeat_time = self.get_clock().now()

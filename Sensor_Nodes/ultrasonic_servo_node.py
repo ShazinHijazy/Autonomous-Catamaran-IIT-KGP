@@ -6,9 +6,9 @@ import RPi.GPIO as GPIO
 import time
 
 # GPIO pin numbers
-TRIG = 23
-ECHO = 24
-SERVO = 18
+TRIG = 17
+ECHO = 27
+SERVO = 12
 
 # Constants
 MIN_ANGLE = 0

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="3">
-  <name>autonomous_catamaran</name>
+  <name>catamaran_ros</name>
   <version>1.0.0</version>
   <description>ROS 2 Humble package for complete autonomous navigation and control of an unmanned surface vehicle (USV) with integrated sensors, thruster control, and obstacle avoidance.</description>
 
