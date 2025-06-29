@@ -1,0 +1,155 @@
+amcl:
+  ros__parameters:
+    use_sim_time: false
+    base_frame_id: base_link
+    odom_frame_id: odom
+    scan_topic: /scan
+    min_particles: 500
+    max_particles: 2000
+    alpha1: 0.2
+    alpha2: 0.2
+    alpha3: 0.2
+    alpha4: 0.2
+    alpha5: 0.2
+    laser_max_beams: 60
+
+map_server:
+  ros__parameters:
+    use_sim_time: false
+    yaml_filename: /home/$USER/catamaran_ws/src/catamaran_navigation/maps/my_map.yaml
+
+bt_navigator:
+  ros__parameters:
+    use_sim_time: false
+    global_frame: map
+    robot_base_frame: base_link
+    odom_topic: /odom
+    bt_loop_duration: 10
+    default_server_timeout: 20
+    default_nav_to_pose_bt_xml: /home/$USER/catamaran_ws/src/catamaran_navigation/config/behavior_trees/navigate_to_pose_bt.xml
+    default_nav_through_poses_bt_xml: /home/$USER/catamaran_ws/src/catamaran_navigation/config/behavior_trees/navigate_through_poses_bt.xml
+
+planner_server:
+  ros__parameters:
+    use_sim_time: false
+    expected_planner_frequency: 1.0
+    planner_plugins: ["GridBased"]
+    GridBased:
+      plugin: "nav2_navfn_planner/NavfnPlanner"
+      tolerance: 0.5
+      use_astar: false
+      allow_unknown: true
+
+controller_server:
+  ros__parameters:
+    use_sim_time: false
+    controller_frequency: 10.0
+    controller_plugins: ["FollowPath"]
+    FollowPath:
+      plugin: "dwb_core::DWBLocalPlanner"
+      min_vel_x: 0.2
+      max_vel_x: 1.2
+      max_vel_theta: 1.0
+      min_vel_theta: -1.0
+      acc_lim_x: 1.0
+      acc_lim_theta: 1.0
+      decel_lim_x: -1.0
+      decel_lim_theta: -1.0
+      vx_samples: 20
+      vy_samples: 5
+      vtheta_samples: 20
+      sim_time: 2.0
+      linear_granularity: 0.05
+      angular_granularity: 0.025
+      xy_goal_tolerance: 0.25
+      yaw_goal_tolerance: 0.25
+      trans_stopped_velocity: 0.25
+      short_circuit_trajectory_evaluation: true
+      stateful: true
+
+local_costmap:
+  ros__parameters:
+    use_sim_time: false
+    global_frame: odom
+    robot_base_frame: base_link
+    update_frequency: 5.0
+    publish_frequency: 2.0
+    rolling_window: true
+    width: 5.0
+    height: 5.0
+    resolution: 0.05
+    footprint: [[-1.175, -0.485], [-1.175, 0.485], [1.175, 0.485], [1.175, -0.485]]
+    plugins: ["obstacle_layer", "inflation_layer"]
+    obstacle_layer:
+      enabled: true
+      observation_sources: scan, ultrasonic_front, ultrasonic_back
+      scan:
+        topic: /scan
+        sensor_frame: rplidar_link
+        data_type: LaserScan
+        marking: true
+        clearing: true
+      ultrasonic_front:
+        topic: /ultrasonic_front
+        sensor_frame: ultrasonic_front_link
+        data_type: Range
+        marking: true
+        clearing: true
+      ultrasonic_back:
+        topic: /ultrasonic_back
+        sensor_frame: ultrasonic_back_link
+        data_type: Range
+        marking: true
+        clearing: true
+    inflation_layer:
+      enabled: true
+      inflation_radius: 0.6
+
+global_costmap:
+  ros__parameters:
+    use_sim_time: false
+    global_frame: map
+    robot_base_frame: base_link
+    update_frequency: 1.0
+    publish_frequency: 1.0
+    width: 50.0
+    height: 50.0
+    resolution: 0.05
+    footprint: [[-1.175, -0.485], [-1.175, 0.485], [1.175, 0.485], [1.175, -0.485]]
+    plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
+    static_layer:
+      enabled: true
+    obstacle_layer:
+      enabled: true
+      observation_sources: scan, ultrasonic_front, ultrasonic_back
+      scan:
+        topic: /scan
+        sensor_frame: rplidar_link
+        data_type: LaserScan
+        marking: true
+        clearing: true
+      ultrasonic_front:
+        topic: /ultrasonic_front
+        sensor_frame: ultrasonic_front_link
+        data_type: Range
+        marking: true
+        clearing: true
+      ultrasonic_back:
+        topic: /ultrasonic_back
+        sensor_frame: ultrasonic_back_link
+        data_type: Range
+        marking: true
+        clearing: true
+    inflation_layer:
+      enabled: true
+      inflation_radius: 0.6
+
+recoveries_server:
+  ros__parameters:
+    use_sim_time: false
+
+waypoint_follower:
+  ros__parameters:
+    use_sim_time: false
+    loop_rate: 20
+    stop_on_failure: false

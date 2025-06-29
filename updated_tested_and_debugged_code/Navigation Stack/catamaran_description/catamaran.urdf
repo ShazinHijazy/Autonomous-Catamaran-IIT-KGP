@@ -1,0 +1,172 @@
+<?xml version="1.0"?>
+<robot name="catamaran">
+
+  <!-- Main bridge/deck -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="2.35 0.97 0.15"/>
+      </geometry>
+      <origin xyz="0 0 0.075"/>
+      <material name="Aluminum">
+        <color rgba="0.7 0.7 0.7 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <!-- Starboard (right) hull -->
+  <link name="starboard_hull">
+    <visual>
+      <geometry>
+        <box size="2.35 0.20 0.30"/>
+      </geometry>
+      <origin xyz="0 -0.385 0.15"/>
+      <material name="Blue">
+        <color rgba="0.1 0.1 0.8 1.0"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="starboard_hull_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="starboard_hull"/>
+    <origin xyz="0 -0.385 0"/>
+  </joint>
+
+  <!-- Port (left) hull -->
+  <link name="port_hull">
+    <visual>
+      <geometry>
+        <box size="2.35 0.20 0.30"/>
+      </geometry>
+      <origin xyz="0 0.385 0.15"/>
+      <material name="Red">
+        <color rgba="0.8 0.1 0.1 1.0"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="port_hull_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="port_hull"/>
+    <origin xyz="0 0.385 0"/>
+  </joint>
+
+  <!-- GNSS (GPS) sensor (top, center) -->
+  <link name="gnss_link">
+    <visual>
+      <geometry>
+        <cylinder length="0.05" radius="0.04"/>
+      </geometry>
+      <material name="White">
+        <color rgba="1 1 1 1"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="gnss_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="gnss_link"/>
+    <origin xyz="0 0 0.40"/>
+  </joint>
+
+  <!-- RP Lidar (center of bridge) -->
+  <link name="rplidar_link">
+    <visual>
+      <geometry>
+        <cylinder length="0.07" radius="0.06"/>
+      </geometry>
+      <material name="Black">
+        <color rgba="0 0 0 1"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="rplidar_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="rplidar_link"/>
+    <origin xyz="0 0 0.18"/>
+  </joint>
+
+  <!-- Waterproof ultrasonic (front, center, just above waterline) -->
+  <link name="ultrasonic_front_link">
+    <visual>
+      <geometry>
+        <cylinder length="0.03" radius="0.02"/>
+      </geometry>
+      <material name="Green">
+        <color rgba="0.2 0.8 0.2 1"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="ultrasonic_front_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="ultrasonic_front_link"/>
+    <origin xyz="1.1 0 0.08"/>
+  </joint>
+
+  <!-- HC-SR04 (rear, starboard hull, protected) -->
+  <link name="ultrasonic_back_link">
+    <visual>
+      <geometry>
+        <cylinder length="0.025" radius="0.01"/>
+      </geometry>
+      <material name="Yellow">
+        <color rgba="0.9 0.9 0.2 1"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="ultrasonic_back_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="ultrasonic_back_link"/>
+    <origin xyz="-1.1 -0.35 0.10"/>
+  </joint>
+
+  <!-- IMU (center of mass, near base_link) -->
+  <link name="imu_link">
+    <visual>
+      <geometry>
+        <box size="0.05 0.05 0.02"/>
+      </geometry>
+      <material name="Orange">
+        <color rgba="0.9 0.5 0.1 1"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="imu_link"/>
+    <origin xyz="0 0 0.12"/>
+  </joint>
+
+  <!-- Starboard (right) rear thruster -->
+  <link name="thruster_starboard_link">
+    <visual>
+      <geometry>
+        <cylinder length="0.10" radius="0.04"/>
+      </geometry>
+      <material name="Silver">
+        <color rgba="0.7 0.7 0.7 1"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="thruster_starboard_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="thruster_starboard_link"/>
+    <origin xyz="-1.175 -0.385 0.05"/>
+  </joint>
+
+  <!-- Port (left) rear thruster -->
+  <link name="thruster_port_link">
+    <visual>
+      <geometry>
+        <cylinder length="0.10" radius="0.04"/>
+      </geometry>
+      <material name="Silver">
+        <color rgba="0.7 0.7 0.7 1"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="thruster_port_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="thruster_port_link"/>
+    <origin xyz="-1.175 0.385 0.05"/>
+  </joint>
+
+</robot>

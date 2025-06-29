@@ -1,0 +1,15 @@
+<root main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <PipelineSequence name="NavigateThroughPoses">
+      <RecoveryNode number_of_retries="1">
+        <SequenceStar name="navigation_recovery">
+          <SetBlackboard output_key="goals" value="{goals}" />
+          <ComputePathThroughPoses goals="{goals}" path="{path}" planner_id="" />
+          <FollowPath path="{path}" controller_id="" goal="{goals[-1]}" />
+          <ClearCostmapExceptRegion map_subtype="local_costmap" reset_distance="2.0"/>
+        </SequenceStar>
+      </RecoveryNode>
+      <GoalReached/>
+    </PipelineSequence>
+  </BehaviorTree>
+</root>

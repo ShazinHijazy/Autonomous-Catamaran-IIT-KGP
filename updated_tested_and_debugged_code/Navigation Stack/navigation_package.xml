@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>catamaran_navigation</name>
+  <version>0.1.0</version>
+  <description>Navigation stack and configuration for the autonomous catamaran.</description>
+  <maintainer email="your.email@domain.com">Your Name</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- Navigation and SLAM -->
+  <depend>navigation2</depend>
+  <depend>nav2_bringup</depend>
+  <depend>slam_toolbox</depend>
+
+  <!-- Core robot and ROS 2 tools -->
+  <depend>robot_state_publisher</depend>
+  <depend>rviz2</depend>
+  <depend>xacro</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>launch_ros</depend>
+
+  <!-- Nav2 components (explicit for clarity, some are included by navigation2) -->
+  <depend>nav2_amcl</depend>
+  <depend>nav2_map_server</depend>
+  <depend>nav2_bt_navigator</depend>
+  <depend>nav2_controller</depend>
+  <depend>nav2_planner</depend>
+  <depend>nav2_lifecycle_manager</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
