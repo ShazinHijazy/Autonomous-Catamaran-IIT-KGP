@@ -1,0 +1,24 @@
+# Automatically normalize line endings
+* text=auto
+
+# Force LF endings for all source code files (cross-platform friendly)
+*.c     text eol=lf
+*.cpp   text eol=lf
+*.h     text eol=lf
+*.py    text eol=lf
+*.html  text eol=lf
+*.css   text eol=lf
+*.js    text eol=lf
+
+# Force CRLF endings for Windows executables and configs (optional)
+*.exe   binary
+*.dll   binary
+*.config text eol=crlf
+
+# Treat minified or binary files correctly
+*.min.js binary
+*.min.css binary
+*.jpg  binary
+*.png  binary
+*.gif  binary
+*.ico  binary
