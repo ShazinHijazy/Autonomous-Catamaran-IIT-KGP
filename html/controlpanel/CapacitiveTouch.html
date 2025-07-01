@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<script>
+	CapacitiveTouchExample = {}
+
+	var $KEY_phid;
+	var $KEY_errOn = false;
+
+	CapacitiveTouchExample.setup = function(phid) {
+
+		phid.onPropertyChange = $KEY_propChange;
+		phid.onTouch = $KEY_touchStart;
+		phid.onTouchEnd = $KEY_touchEnd;
+		phid.onError = $KEY_onError;
+
+		switch(phid.getDeviceID()) {
+			case phidget22.DeviceID.PN_1016:
+				$('#$KEY_sens').hide();
+				$('#$KEY_sensLabel').hide();
+				$('#$KEY_sensValue').hide();
+				break;
+			case phidget22.DeviceID.PN_1015:
+				$('#$KEY_sens').hide();
+				$('#$KEY_sensLabel').hide();
+				$('#$KEY_sensValue').hide();
+				break;
+			case phidget22.DeviceID.PN_HIN1000:
+				$('#$KEY_axisField').hide();
+				break;
+			case phidget22.DeviceID.PN_HIN1001:
+				if(phid._channel != 4)
+					$('#$KEY_axisField').hide();
+				break;
+		}
+
+		$KEY_phid = phid;
+		$('#$KEY_di').val(phid.getDataInterval());
+		$('#$KEY_ct').val(phid.getTouchValueChangeTrigger());
+		$('#$KEY_sens').val(phid.getSensitivity());
+		$('#$KEY_sensValue').text(phid.getSensitivity());
+
+		$('.axisdial').knob({
+			min: 0,
+			max: 1.0,
+			step: 0.0001,
+			readOnly: true,
+			width: 120,
+			height: 120,
+			fgColor: '#000000',
+			fontWeight: '12px',
+			thickness: 0.1,
+			skin: 'tron',
+			cursor: true
+		});
+	}
+
+	function $KEY_touchStart(axis) {
+
+		$('#$KEY_touched').prop("checked", true);
+		$('#$KEY_axisDial').val(axis).trigger('change');
+	}
+
+	function $KEY_touchEnd(axis) {
+
+		$('#$KEY_touched').prop("checked", false);
+		$('#$KEY_axisDial').val(axis).trigger('change');
+	}
+
+	function $KEY_propChange(prop) {
+
+		if(prop === 'DataInterval')
+			$('#$KEY_di').val(this.getDataInterval());
+
+		if(prop === 'Sensitivity') {
+			$('#$KEY_sens').val(this.getSensitivity());
+			$('#$KEY_sensValue').text(this.getSensitivity());
+		}
+
+		if(prop === 'TouchValueChangeTrigger')
+			$('#$KEY_ct').val(this.getTouchValueChangeTrigger());
+	}
+
+	function $KEY_onError(code, msg) {
+
+		var d = new Date();
+		var h = d.getHours();
+		var m = d.getMinutes();
+		var s = d.getSeconds();
+		var ms = d.getMilliseconds();
+		var tr = $('<tr>');
+
+		tr.append('<td class="errTable"> ' + h + ':' + m + ':' + s + '.' + ms);
+		tr.append('<td class="errTableRed"> 0x' + code.toString(16));
+		tr.append('<td class="errTable">' + msg);
+		$('#$KEY_errorTable').append(tr);
+		$("#$KEY_errScroll").scrollTop($("#$KEY_errScroll")[0].scrollHeight);
+		$("#$KEY_errorField").show();
+	}
+
+	function $KEY_errClear() {
+
+		$('#$KEY_errorTable tbody').remove();
+	}
+
+	function $KEY_setDI() {
+
+		var di = Number($('#$KEY_di').val());
+		if(isNaN(di))
+			return (false);
+
+		if(di < $KEY_phid.getMinDataInterval()) {
+			di = $KEY_phid.getMinDataInterval();
+			$('#$KEY_di').val(di);
+		}
+
+		if(di > $KEY_phid.getMaxDataInterval()) {
+			di = $KEY_phid.getMaxDataInterval();
+			$('#$KEY_di').val(di);
+		}
+
+		$KEY_phid.setDataInterval(di);
+		return (false);
+	}
+
+	function $KEY_setCT() {
+
+		var ct = Number($('#$KEY_ct').val());
+		if(isNaN(ct))
+			return (false);
+
+		$KEY_phid.setTouchValueChangeTrigger(ct);
+		return (false);
+	}
+
+	function $KEY_sensChange() {
+
+		$KEY_phid.setSensitivity($('#$KEY_sens').val());
+		$('#$KEY_sensValue').text($('#$KEY_sens').val());
+	}
+
+</script>
+<body>
+	<fieldset>
+		<legend><label class='phidinfo'>Settings</label></legend>
+		<table>
+			<tr>
+				<td><label class='phidinfo'>Data Interval</label></td>
+				<td><input type='text' class='phidinfo' id='$KEY_di' size='7' value='30'></td>
+				<td><input type='submit' size='9' class='phidinfo' onclick='$KEY_setDI()' value='Set'></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>Change Trigger</label></td>
+				<td><input type='text' class='phidinfo' id='$KEY_ct' size='7' value='0.0'></td>
+				<td><input type='submit' size='9' id='$KEY_ctButton' class='phidinfo' onclick='$KEY_setCT()' value='Set'></td>
+			</tr>
+			<tr>
+				<td width="120px" align='left'><label id='$KEY_sensLabel' class='phidinfo'>Sensitivity = </label><label id='$KEY_sensValue'>0.5</label></td>
+				<td colspan="2" align='right'><input id='$KEY_sens' type="range" step="0.01" min="0" max="1" value="0.5" onInput="$KEY_sensChange()"></td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset id='$KEY_axisField'>
+		<legend><label class='phidinfo'>Axis</label></legend>
+		<table>
+			<tr>
+				<td><input id='$KEY_axisDial' class="axisdial" value="0"></td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset id='$KEY_touchField'>
+		<legend><label class='phidinfo'>Touch</label></legend>
+		<table>
+			<tr>
+				<td><label>Touched:</label></td>
+				<td style="text-align:center"><input type="checkbox" onclick="return false;" readonly id='$KEY_touched' value="0"></td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset class="errorField" id="$KEY_errorField">
+		<legend><label class='phidinfo'>Errors</label></legend>
+		<div id="$KEY_errScroll" class="errScroll">
+			<table class="errorTable" id="$KEY_errorTable">
+				<col width="80">
+				<col width="80">
+				<col width="160">
+				<thead>
+					<tr>
+						<th align='left'><label>Time</label></th>
+						<th align='center'><label>Error #</label></th>
+						<th align='center'><label>Desc</label></th>
+						<th><input type='submit' size='9' class='phidinfo' onclick='$KEY_errClear()' value='Clear'></th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+			</table>
+		</div>
+	</fieldset>
+</body>
+</html>

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<script>
+	SoundSensorExample = {}
+
+	var $KEY_phid;
+	var $KEY_errOn = false;
+
+	SoundSensorExample.setup = function(phid) {
+
+		$KEY_phid = phid;
+		$('#$KEY_di').val(phid.getDataInterval());
+		$('#$KEY_ct').val(phid.getSPLChangeTrigger());
+		phid.onSPLChange = $KEY_sndChange;
+		phid.onError = $KEY_onError;
+		phid.onPropertyChange = $KEY_propChange;
+	}
+
+	function $KEY_rangeChange() {
+		$KEY_phid.setSPLRange($('#$KEY_rangeCombo').val());
+	}
+
+	function $KEY_propChange(prop) {
+
+		if(prop === 'DataInterval')
+			$('#$KEY_di').val(this.getDataInterval());
+
+		if(prop === 'SPLChangeTrigger')
+			$('#$KEY_ct').val(this.getSPLChangeTrigger());
+
+		if(prop === 'SPLRange')
+			$('#$KEY_rangeCombo').val(this.getSPLRange());
+	}
+
+	function $KEY_onError(code, msg) {
+
+		var d = new Date();
+		var h = d.getHours();
+		var m = d.getMinutes();
+		var s = d.getSeconds();
+		var ms = d.getMilliseconds();
+		var tr = $('<tr>');
+
+		tr.append('<td class="errTable"> ' + h + ':' + m + ':' + s + '.' + ms);
+		tr.append('<td class="errTableRed"> 0x' + code.toString(16));
+		tr.append('<td class="errTable">' + msg);
+		$('#$KEY_errorTable').append(tr);
+		$("#$KEY_errScroll").scrollTop($("#$KEY_errScroll")[0].scrollHeight);
+		$("#$KEY_errorField").show();
+	}
+
+	function $KEY_errClear() {
+
+		$('#$KEY_errorTable tbody').remove();
+	}
+
+	function $KEY_sndChange(db, dba, dbc, octaves) {
+
+		$('#$KEY_DB').val(db);
+		$('#$KEY_DBA').val(dba);
+		$('#$KEY_DBC').val(dbc);
+
+		for(i = 0; i < 10; i++) {
+			$('#$KEY_octave' + i).val(octaves[i]);
+			$('#$KEY_text' + i).text(octaves[i].toFixed(2));
+		}
+	}
+
+	function $KEY_setDI() {
+
+		var di = Number($('#$KEY_di').val());
+		if(isNaN(di))
+			return (false);
+
+		if(di < $KEY_phid.getMinDataInterval()) {
+			di = $KEY_phid.getMinDataInterval();
+			$('#$KEY_di').val(di);
+		}
+
+		if(di > $KEY_phid.getMaxDataInterval()) {
+			di = $KEY_phid.getMaxDataInterval();
+			$('#$KEY_di').val(di);
+		}
+
+		$KEY_phid.setDataInterval(di);
+		return (false);
+	}
+
+	function $KEY_setCT() {
+
+		var ct = Number($('#$KEY_ct').val());
+		if(isNaN(ct))
+			return (false);
+
+		$KEY_phid.setSPLChangeTrigger(ct);
+		return (false);
+	}
+
+</script>
+<body>
+	<fieldset>
+		<legend><label class='phidinfo'>Settings</label></legend>
+		<table>
+			<tr>
+				<td><label class='phidinfo'>Data Interval</label></td>
+				<td><input type='text' class='phidinfo' id='$KEY_di' size='7' value='30'></td>
+				<td><input type='submit' size='9' class='phidinfo' onclick='$KEY_setDI()' value='Set'></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>Change Trigger</label></td>
+				<td><input type='text' class='phidinfo' id='$KEY_ct' size='7' value='0.0'></td>
+				<td><input type='submit' size='9' class='phidinfo' onclick='$KEY_setCT()' value='Set'></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>SPL Range</label></td>
+				<td style="text-align:center">
+					<select class='phidinfo' onChange='$KEY_rangeChange()' id='$KEY_rangeCombo'>
+						<option value="1">102dB</option>
+						<option value="2">82dB</option>
+					</select>
+				</td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset>
+		<legend><label class='phidinfo'>Sound Data</label></legend>
+		<table>
+			<tr>
+				<td align='left'><label>Sound Pressure Level</label></td>
+			</tr>
+			<tr>
+				<td><input readonly type="text" size="8" id='$KEY_DB' class="phid" value="0"> dB</td>
+			</tr>
+			<tr>
+				<td><input readonly type="text" size="8" id='$KEY_DBA' class="phid" value="0"> dBA</td>
+			</tr>
+			<tr>
+				<td><input readonly type="text" size="8" id='$KEY_DBC' class="phid" value="0"> dBC</td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset>
+		<legend><label class='phidinfo'>Octave Data</label></legend>
+		<label>Octaves</label>
+		<div>
+			<input type="range" id='$KEY_octave0' step="1" min="0" max="105" value="0" readonly>
+			<label id='$KEY_text0' class='phidinfo'>0 dB</label>
+			<label>(31.5Hz Band)</label>
+		</div>
+		<div>
+			<input type="range" id='$KEY_octave1' step="1" min="0" max="105" value="0" readonly>
+			<label id='$KEY_text1' class='phidinfo'>0 dB</label>
+			<label>(63Hz Band)</label>
+		</div>
+		<div>
+			<input type="range" id='$KEY_octave2' step="1" min="0" max="105" value="0" readonly>
+			<label id='$KEY_text2' class='phidinfo'>0 dB</label>
+			<label>(125Hz Band)</label>
+		</div>
+		<div>
+			<input type="range" id='$KEY_octave3' step="1" min="0" max="105" value="0" readonly>
+			<label id='$KEY_text3' class='phidinfo'>0 dB</label>
+			<label>(250Hz Band)</label>
+		</div>
+		<div>
+			<input type="range" id='$KEY_octave4' step="1" min="0" max="105" value="0" readonly>
+			<label id='$KEY_text4' class='phidinfo'>0 dB</label>
+			<label>(500Hz Band)</label>
+		</div>
+		<div>
+			<input type="range" id='$KEY_octave5' step="1" min="0" max="105" value="0" readonly>
+			<label id='$KEY_text5' class='phidinfo'>0 dB</label>
+			<label>(1KHz Band)</label>
+		</div>
+		<div>
+			<input type="range" id='$KEY_octave6' step="1" min="0" max="105" value="0" readonly>
+			<label id='$KEY_text6' class='phidinfo'>0 dB</label>
+			<label>(2KHz Band)</label>
+		</div>
+		<div>
+			<input type="range" id='$KEY_octave7' step="1" min="0" max="105" value="0" readonly>
+			<label id='$KEY_text7' class='phidinfo'>0 dB</label>
+			<label>(4KHz Band)</label>
+		</div>
+		<div>
+			<input type="range" id='$KEY_octave8' step="1" min="0" max="105" value="0" readonly>
+			<label id='$KEY_text8' class='phidinfo'>0 dB</label>
+			<label>(8KHz Band)</label>
+		</div>
+		<div>
+			<input type="range" id='$KEY_octave9' step="1" min="0" max="105" value="0" readonly>
+			<label id='$KEY_text9' class='phidinfo'>0 dB</label>
+			<label>(16KHz Band)</label>
+		</div>
+	</fieldset>
+	<fieldset class="errorField" id="$KEY_errorField">
+		<legend><label class='phidinfo'>Errors</label></legend>
+		<div id="$KEY_errScroll" class="errScroll">
+			<table class="errorTable" id="$KEY_errorTable">
+				<col width="80">
+				<col width="80">
+				<col width="160">
+				<thead>
+					<tr>
+						<th align='left'><label>Time</label></th>
+						<th align='center'><label>Error #</label></th>
+						<th align='center'><label>Desc</label></th>
+						<th><input type='submit' size='9' class='phidinfo' onclick='$KEY_errClear()' value='Clear'></th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+			</table>
+		</div>
+	</fieldset>
+</body>
+</html>

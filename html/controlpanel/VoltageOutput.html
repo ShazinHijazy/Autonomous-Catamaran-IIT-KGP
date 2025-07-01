@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<script>
+	VoltageOutputExample = {}
+
+	var $KEY_phid;
+	var $KEY_errOn = false;
+
+	VoltageOutputExample.setup = function(phid) {
+
+		phid.onError = $KEY_onError;
+		phid.onPropertyChange = $KEY_propChange;
+		$KEY_phid = phid;
+		switch(phid.getDeviceID()) {
+			case phidget22.DeviceID.PN_OUT1000:
+				$('#$KEY_rangeCombo').hide();
+				$('#$KEY_rangeLabel').hide();
+				$KEY_setMinMax();
+				break;
+			case phidget22.DeviceID.PN_OUT1001:
+			case phidget22.DeviceID.PN_OUT1002:
+				$('#$KEY_enableLabel').hide();
+				$('#$KEY_enableBox').hide();
+				$('#$KEY_rangeCombo').val(phid.getVoltageOutputRange());
+				$KEY_setMinMax();
+				break;
+			case phidget22.DeviceID.PN_1002:
+				$KEY_phid.setVoltage(0);
+				$('#$KEY_rangeCombo').hide();
+				$('#$KEY_rangeLabel').hide();
+				$KEY_setMinMax();
+				break;
+		}
+
+		$('#$KEY_voltage').val(phid.getVoltage());
+		$('#$KEY_voltText').text($('#$KEY_voltage').val());
+	}
+
+	function $KEY_propChange(prop) {
+
+		if(prop === 'Enabled')
+			$('#$KEY_enableBox').prop("checked", this.getEnabled());
+
+		if(prop === 'Voltage') {
+			$('#$KEY_voltage').val(this.getVoltage());
+			$('#$KEY_voltText').text($('#$KEY_voltage').val());
+		}
+
+		if(prop === 'VoltageOutputRange') {
+			$('#$KEY_rangeCombo').val(this.getVoltageOutputRange());
+			$KEY_setMinMax();
+		}
+	}
+
+	function $KEY_onError(code, msg) {
+
+		var d = new Date();
+		var h = d.getHours();
+		var m = d.getMinutes();
+		var s = d.getSeconds();
+		var ms = d.getMilliseconds();
+		var tr = $('<tr>');
+
+		tr.append('<td class="errTable"> ' + h + ':' + m + ':' + s + '.' + ms);
+		tr.append('<td class="errTableRed"> 0x' + code.toString(16));
+		tr.append('<td class="errTable">' + msg);
+		$('#$KEY_errorTable').append(tr);
+		$("#$KEY_errScroll").scrollTop($("#$KEY_errScroll")[0].scrollHeight);
+		$("#$KEY_errorField").show();
+	}
+
+	function $KEY_errClear() {
+
+		$('#$KEY_errorTable tbody').remove();
+	}
+
+	function $KEY_setMinMax() {
+		var minVoltage = $KEY_phid.getMinVoltage();
+		var maxVoltage = $KEY_phid.getMaxVoltage();
+
+		if($KEY_phid.getDeviceID() == phidget22.DeviceID.PN_OUT1002 || $KEY_phid.getDeviceID() == phidget22.DeviceID.PN_OUT1001) {
+			if($KEY_phid.getVoltageOutputRange() == phidget22.VoltageOutputRange.VOLTS_10) {
+				minVoltage = -10;
+				maxVoltage = 10;
+			}
+			else {
+				minVoltage = 0;
+				maxVoltage = 5;
+			}
+
+		}
+
+		$KEY_setLabel('minVolt', minVoltage);
+		$KEY_setLabel('maxVolt', maxVoltage);
+		$('#$KEY_voltage').attr('min', minVoltage);
+		$('#$KEY_voltage').attr('max', maxVoltage);
+		$('#$KEY_voltage').attr('step', (maxVoltage - minVoltage) / 100);
+	}
+
+	function $KEY_setLabel(name, value) {
+
+		var id = '#$KEY_' + name;
+		var div = $(id);
+		div.text(value);
+	}
+
+	function $KEY_voltageChange() {
+
+		$KEY_phid.setVoltage($('#$KEY_voltage').val());
+		$('#$KEY_voltText').text($('#$KEY_voltage').val());
+	}
+
+	function $KEY_enableChange() {
+		$KEY_phid.setEnabled($('#$KEY_enableBox')[0].checked);
+		$KEY_voltageChange();
+	}
+
+	function $KEY_rangeChange() {
+		$KEY_phid.setVoltageOutputRange($('#$KEY_rangeCombo').val());
+		$("#$KEY_rangeCombo option[value='0']").remove();
+		$KEY_phid.setVoltage(0);
+		$('#$KEY_voltage').val(0);
+		$('#$KEY_voltText').text("0");
+		setTimeout($KEY_setMinMax, 40);
+	}
+
+</script>
+<body>
+	<fieldset id="$KEY_ledField">
+		<legend><label class='phidinfo'>Voltage Output</label></legend>
+		<table>
+			<tr>
+				<td style="text-align:center"><label class='phidinfo' id='$KEY_voltLabel'>Output Voltage</label></td>
+				<td style="text-align:center"><label class='phidinfo' id='$KEY_rangeLabel'>Range</label></td>
+				<td><label id='$KEY_enableLabel' class='phidinfo'>Enabled</label></td>
+			</tr>
+			<tr>
+				<td>
+					<label id='$KEY_minVolt' style="font-size:10px"></label>
+					<input type="range" id='$KEY_voltage' step="0.01" min="0" max="1" value="0" onInput="$KEY_voltageChange()">
+					<label id='$KEY_maxVolt' style="font-size:10px"></label>
+				</td>
+				<td style="text-align:center">
+					<select class='phidinfo' onChange='$KEY_rangeChange()' id='$KEY_rangeCombo'>
+						<option value="1">10V</option>
+						<option value="2">5V</option>
+					</select>
+				</td>
+				<td align="center"><input type="checkbox" id='$KEY_enableBox' onChange="$KEY_enableChange()" value="0"></td>
+			</tr>
+			<tr>
+				<td align="center"><label id='$KEY_voltText'></label></td>
+			</tr>
+		</table>
+		<br />
+	</fieldset>
+	<fieldset class="errorField" id="$KEY_errorField">
+		<legend><label class='phidinfo'>Errors</label></legend>
+		<div id="$KEY_errScroll" class="errScroll">
+			<table class="errorTable" id="$KEY_errorTable">
+				<col width="80">
+				<col width="80">
+				<col width="160">
+				<thead>
+					<tr>
+						<th align='left'><label>Time</label></th>
+						<th align='center'><label>Error #</label></th>
+						<th align='center'><label>Desc</label></th>
+						<th><input type='submit' size='9' class='phidinfo' onclick='$KEY_errClear()' value='Clear'></th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+			</table>
+		</div>
+	</fieldset>
+</body>
+</html>

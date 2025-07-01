@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+	<script>
+
+		StepperExample = {};
+
+		var $KEY_phid;
+		var $KEY_errOn = false;
+
+		StepperExample.setup = function (phid) {
+
+			$KEY_phid = phid;
+			phid.onPositionChange = $KEY_positionChange;
+			phid.onVelocityChange = $KEY_velocityChange;
+			phid.onStopped = $KEY_stoppedEvent;
+			phid.onError = $KEY_onError;
+			phid.onPropertyChange = $KEY_propChange;
+
+			switch (phid.getDeviceID()) {
+				case phidget22.DeviceID.PN_1062:
+					$('#$KEY_currentTr').hide();
+					$('#$KEY_holdingTr').hide();
+					break;
+				case phidget22.DeviceID.PN_1063:
+				case phidget22.DeviceID.PN_1067:
+					$('#$KEY_holdingTr').hide();
+					break;
+				case phidget22.DeviceID.PN_STC1000:
+				case phidget22.DeviceID.PN_STC1001:
+				case phidget22.DeviceID.PN_STC1002:
+					break;
+			}
+
+			var engaged = phid.getEngaged();
+			if (engaged)
+				$KEY_setInput('engaged', 'Disengage');
+			else
+				$KEY_setInput('engaged', 'Engage');
+
+			$KEY_setInput('acceleration', phid.getAcceleration());
+			$KEY_setInput('velocityLimit', phid.getVelocityLimit());
+			//$KEY_setInput('current', "Not set");
+			$KEY_setInput('targetPosition', 0);
+			$KEY_setInput('offset', 0);
+
+			$('#$KEY_controlCombo').val(phid.getControlMode());
+
+			var min = Math.round(phid.getMinAcceleration() + 1);
+			var max = Math.round(phid.getMaxAcceleration() - 1);
+			$KEY_setLabel('accRangeStart', min);
+			$KEY_setLabel('accRangeEnd', max);
+			var ele = $('#$KEY_accRange');
+			ele.attr({ max: max, min: min });
+			ele.val(phid.getAcceleration());
+			ele.on("input change", function () {
+				var val = $('#$KEY_accRange').val();
+				phid.setAcceleration(Number(val));
+				$KEY_setInput('acceleration', val);
+			});
+
+			min = Math.round(phid.getMinVelocityLimit() + 1);
+			max = Math.round(phid.getMaxVelocityLimit() - 1);
+			$KEY_setLabel('velRangeStart', min);
+			$KEY_setLabel('velRangeEnd', max);
+			ele = $('#$KEY_velRange')
+			ele.attr({ max: max, min: min });
+			ele.val(phid.getVelocityLimit());
+			ele.on("input change", function () {
+				var val = $('#$KEY_velRange').val();
+				phid.setVelocityLimit(Number(val)).then(function () {
+					$KEY_setInput('velocityLimit', $KEY_phid.getVelocityLimit());
+				});
+			});
+
+			min = phid.getMinPosition().toExponential(2);
+			max = phid.getMaxPosition().toExponential(2);
+			$KEY_setLabel('targetPositionRangeStart', min);
+			$KEY_setLabel('targetPositionRangeEnd', max);
+			ele = $('#$KEY_targetPositionRange');
+			ele.attr({ min: min, max: max });
+			ele.on("input change", async function () {
+				var val = $('#$KEY_targetPositionRange').val();
+				$KEY_stopped(false);
+				await phid.setTargetPosition(Number(val));
+				$KEY_setInput('targetPosition', phid.getTargetPosition().toExponential(2));
+			});
+
+			min = (phid.getMinPosition() / 100).toExponential(2);
+			max = (phid.getMaxPosition() / 100).toExponential(2);
+			$KEY_setLabel('offsetRangeStart', min);
+			$KEY_setLabel('offsetRangeEnd', max);
+			ele = $('#$KEY_offsetRange');
+			ele.attr({ min: min, max: max });
+			ele.on("input change", function () {
+				var val = $('#$KEY_offsetRange').val();
+				$KEY_stopped(false);
+				$KEY_setInput('offset', (val * 1).toExponential(2));
+				phid.addPositionOffset(Number(val));
+				$KEY_refreshMinMax(false);
+			});
+
+			min = phid.getMinCurrentLimit();
+			max = phid.getMaxCurrentLimit();
+			$KEY_setLabel('curRangeStart', min.toFixed(2));
+			$KEY_setLabel('curRangeEnd', max.toFixed(2));
+			ele = $('#$KEY_curRange');
+			ele.val(phid.getCurrentLimit());
+			$KEY_setInput('current', phid.getCurrentLimit());
+			ele.attr({ min: min, max: max });
+			ele.on("input change", function () {
+				var val = $('#$KEY_curRange').val();
+				$KEY_setInput('current', val);
+				phid.setCurrentLimit(Number(val));
+			});
+
+			min = phid.getMinCurrentLimit();
+			max = phid.getMaxCurrentLimit();
+			$KEY_setLabel('holdRangeStart', min.toFixed(2));
+			$KEY_setLabel('holdRangeEnd', max.toFixed(2));
+			ele = $('#$KEY_holdRange');
+			ele.attr({ min: min, max: max });
+			ele.on("input change", function () {
+				var val = $('#$KEY_holdRange').val();
+				$KEY_setInput('holding', val);
+				phid.setHoldingCurrentLimit(Number(val));
+			});
+
+		}
+
+		function $KEY_propChange(prop) {
+
+			if (prop === 'DataInterval')
+				$('#$KEY_di').val(this.getDataInterval());
+
+			if (prop === 'Acceleration') {
+				$('#$KEY_acceleration').val(this.getAcceleration());
+				$('#$KEY_accRange').val(this.getAcceleration());
+			}
+
+			if (prop === 'ControlMode')
+				$('#$KEY_controlCombo').val(this.getControlMode());
+
+			if (prop === 'HoldingCurrentLimit') {
+				$('#$KEY_holding').val(this.getHoldingCurrentLimit());
+				$('#$KEY_holdRange').val(this.getHoldingCurrentLimit());
+			}
+
+			if (prop === 'RescaleFactor')
+				$('#$KEY_rescale').val(this.getRescaleFactor());
+
+			if (prop === 'CurrentLimit') {
+				$('#$KEY_curRange').val(this.getCurrentLimit());
+				$('#$KEY_current').val(this.getCurrentLimit());
+			}
+
+			if (prop === 'Engaged')
+				$('#$KEY_engaged').val(this.getEngaged());
+
+			if (prop === 'TargetPosition') {
+				$('#$KEY_targetPosition').val(this.getTargetPosition());
+				$('#$KEY_targetPositionRange').val(this.getTargetPosition());
+			}
+
+			if (prop === 'VelocityLimit') {
+				$('#$KEY_velocityLimit').val(this.getVelocityLimit());
+				$('#$KEY_velRange').val(this.getVelocityLimit());
+			}
+		}
+
+		function $KEY_refreshMinMax(fromRescale) {
+
+			var min = Math.round($KEY_phid.getMinAcceleration());
+			var max = Math.round($KEY_phid.getMaxAcceleration());
+			var ele = $('#$KEY_accRange');
+
+			$KEY_setLabel('accRangeStart', min);
+			$KEY_setLabel('accRangeEnd', max);
+			ele.attr({ max: max, min: min });
+
+			min = Math.round($KEY_phid.getMinVelocityLimit());
+			max = Math.round($KEY_phid.getMaxVelocityLimit());
+			$KEY_setLabel('velRangeStart', min);
+			$KEY_setLabel('velRangeEnd', max);
+			ele = $('#$KEY_velRange')
+			ele.attr({ max: max, min: min });
+
+			min = ($KEY_phid.getMinPosition()).toExponential(2);
+			max = ($KEY_phid.getMaxPosition()).toExponential(2);
+			$KEY_setLabel('targetPositionRangeStart', min);
+			$KEY_setLabel('targetPositionRangeEnd', max);
+			ele = $('#$KEY_targetPositionRange');
+			ele.attr({ min: min, max: max });
+
+			if (fromRescale) {
+				min = ($KEY_phid.getMinPosition() / 100).toExponential(2);
+				max = ($KEY_phid.getMaxPosition() / 100).toExponential(2);
+				$KEY_setLabel('offsetRangeStart', min);
+				$KEY_setLabel('offsetRangeEnd', max);
+				ele = $('#$KEY_offsetRange');
+				ele.attr({ min: min, max: max });
+			}
+		}
+
+		function $KEY_stopped(moving) {
+
+			$('#$KEY_stopped').prop('checked', moving);
+		}
+
+		function $KEY_setLabel(name, value) {
+
+			var id = '#$KEY_' + name;
+			var div = $(id);
+			div.text(value);
+		}
+
+		function $KEY_setInput(name, value) {
+
+			var id = '#$KEY_' + name;
+			var div = $(id);
+			div.val(value);
+		}
+
+		function $KEY_positionChange(position) {
+
+			$KEY_setInput('position', Math.floor(position));
+		}
+
+		function $KEY_velocityChange(velocity) {
+
+			$KEY_setInput('velocity', velocity);
+		}
+
+		function $KEY_onError(code, msg) {
+
+			var d = new Date();
+			var h = d.getHours();
+			var m = d.getMinutes();
+			var s = d.getSeconds();
+			var ms = d.getMilliseconds();
+			var tr = $('<tr>');
+
+			tr.append('<td class="errTable"> ' + h + ':' + m + ':' + s + '.' + ms);
+			tr.append('<td class="errTableRed"> 0x' + code.toString(16));
+			tr.append('<td class="errTable">' + msg);
+			$('#$KEY_errorTable').append(tr);
+			$("#$KEY_errScroll").scrollTop($("#$KEY_errScroll")[0].scrollHeight);
+			$("#$KEY_errorField").show();
+		}
+
+		function $KEY_errClear() {
+
+			$('#$KEY_errorTable tbody').remove();
+		}
+
+		function $KEY_stoppedEvent() {
+
+			$KEY_stopped(true);
+			$KEY_setInput('currentPosition', Math.floor(this.data.position));
+			$KEY_setInput('currentPositionRange', Math.floor(this.data.position));
+		}
+
+		function $KEY_rescale() {
+
+			$KEY_phid.setRescaleFactor(Number($("#$KEY_rescale").val()));
+			$KEY_refreshMinMax(true);
+		}
+
+		function $KEY_controlChange() {
+
+			$KEY_phid.setControlMode($('#$KEY_controlCombo').val());
+
+			if ($('#$KEY_controlCombo').val() == 1) {
+
+				var max = Math.round($KEY_phid.getMaxVelocityLimit() - 1);
+				var min = -max;
+				ele = $('#$KEY_velRange')
+				ele.attr({ max: max, min: min });
+				$KEY_setLabel('velRangeStart', min);
+				$KEY_setLabel('velRangeEnd', max);
+				ele.val($KEY_phid.getVelocityLimit());
+				$('#$KEY_runInfo').show();
+				$('#$KEY_targetPosition').attr('disabled', 'disabled');
+				$('#$KEY_targetPositionRange').attr('disabled', 'disabled');
+			}
+			else {
+				var max = Math.round($KEY_phid.getMaxVelocityLimit() - 1);
+				var min = Math.round($KEY_phid.getMinVelocityLimit() + 1);
+				ele = $('#$KEY_velRange')
+				ele.attr({ max: max, min: min });
+				$KEY_setLabel('velRangeStart', min);
+				$KEY_setLabel('velRangeEnd', max);
+				ele.val($KEY_phid.getVelocityLimit());
+				$('#$KEY_runInfo').hide();
+				$('#$KEY_targetPosition').removeAttr("disabled");
+				$('#$KEY_targetPositionRange').removeAttr("disabled");
+			}
+		}
+
+		function $KEY_toggleEngaged() {
+
+			var engaged = $KEY_phid.getEngaged();
+			$KEY_phid.setEngaged(!engaged);
+			if (engaged) {
+				$KEY_setInput('engaged', 'Engage');
+			}
+			else {
+				$KEY_setInput('engaged', 'Disengage');
+			}
+
+		}
+
+	</script>
+	<fieldset>
+		<legend><label class="phidinfo">Motor Controls</label></legend>
+		<table class="phidcontrol">
+			<tr>
+				<td><label class="phidinfo">Control Mode:</label></td>
+				<td>
+					<select class='phidinfo' onChange='$KEY_controlChange()' id='$KEY_controlCombo'>
+						<option value="0">Step</option>
+						<option value="1">Run</option>
+					</select>
+					<label id="$KEY_runInfo" hidden="hidden" class="phidinfo">Set Velocity Limit to change
+						direction</label>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<input type="submit" class="phidinfo" id="$KEY_engaged" onclick="$KEY_toggleEngaged()">
+				</td>
+				<td>
+					<input readonly checked type="checkbox" class="phidinfo" id="$KEY_stopped"
+						onclick="return (false);">
+					<label class="phidinfo">Stopped?</label>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<label class="phidinfo">Target Position</label><br>
+					<input readonly type="text" class="phidinfo" size="8" id="$KEY_targetPosition">
+				</td>
+				<td>
+					<input style="width:320px;" type="range" class="phidinfo" id="$KEY_targetPositionRange" value="0"
+						min="0" max="100">
+					<br>
+					<div align="center">
+						<label class="phidrange" id="$KEY_targetPositionRangeStart">0</label>
+						<label class="phidrange"> | | | | | | | | | | | | | | | | | | | | | | | | </label>
+						<label class="phidrange" id="$KEY_targetPositionRangeEnd">100</label>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<label class="phidinfo">Position Offset</label><br>
+					<input readonly type="text" class="phidinfo" size="8" id="$KEY_offset">
+				</td>
+				<td>
+					<input style="width:320px;" type="range" class="phidinfo" id="$KEY_offsetRange" value="0" min="0"
+						max="100">
+					<br>
+					<div align="center">
+						<label class="phidrange" id="$KEY_offsetRangeStart">0</label>
+						<label class="phidrange"> | | | | | | | | | | | | | | | | | | | | | | | | </label>
+						<label class="phidrange" id="$KEY_offsetRangeEnd">100</label>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<label class="phidinfo">Acceleration</label><br>
+					<input readonly type="text" class="phidinfo" size="8" id="$KEY_acceleration">
+				</td>
+				<td>
+					<input style="width:320px;" type="range" class="phidinfo" id="$KEY_accRange" value="0" min="0"
+						max="100">
+					<br>
+					<div align="center">
+						<label class="phidrange" id="$KEY_accRangeStart">0</label>
+						<label class="phidrange"> | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | </label>
+						<label class="phidrange" id="$KEY_accRangeEnd">100</label>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<label class="phidinfo">Velocity Limit</label><br>
+					<input readonly type="text" class="phidinfo" size="8" id="$KEY_velocityLimit">
+				</td>
+				<td>
+					<input style="width:320px;" type="range" class="phidinfo" id="$KEY_velRange" value="0" min="0"
+						max="100">
+					<br>
+					<div align="center">
+						<label class="phidrange" id="$KEY_velRangeStart">0</label>
+						<label class="phidrange"> | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | </label>
+						<label class="phidrange" id="$KEY_velRangeEnd">100</label>
+					</div>
+				</td>
+			</tr>
+			<tr id="$KEY_currentTr">
+				<td>
+					<label class="phidinfo">Current Limit</label><br>
+					<input readonly type="text" class="phidinfo" size="8" id="$KEY_current">
+				</td>
+				<td>
+					<input style="width:320px;" type="range" class="phidinfo" id="$KEY_curRange" value="0" min="0"
+						step="0.01" max="100">
+					<br>
+					<div align="center">
+						<label class="phidrange" id="$KEY_curRangeStart">0</label>
+						<label class="phidrange"> | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | |
+						</label>
+						<label class="phidrange" id="$KEY_curRangeEnd">100</label>
+					</div>
+				</td>
+			</tr>
+			<tr id="$KEY_holdingTr">
+				<td>
+					<label class="phidinfo">Holding Current Limit</label><br>
+					<input readonly type="text" class="phidinfo" size="8" id="$KEY_holding">
+				</td>
+				<td>
+					<input style="width:320px;" type="range" class="phidinfo" id="$KEY_holdRange" value="0" min="0"
+						step="0.01" max="100">
+					<br>
+					<div align="center">
+						<label class="phidrange" id="$KEY_holdRangeStart">0</label>
+						<label class="phidrange"> | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | |
+						</label>
+						<label class="phidrange" id="$KEY_holdRangeEnd">100</label>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td><label class="phidinfo">Rescale Factor: </label></td>
+				<td>
+					<input type="text" class="phidinfo" size="8" id="$KEY_rescale" value="1">
+					<input type="submit" class="phidinfo" id="$KEY_rescaleButton" onclick="$KEY_rescale()">
+				</td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset>
+		<legend><label class="phidinfo">Motor Data</label></legend>
+		<table class="phidcontrol">
+			<tr>
+				<td><label class="phidinfo">Current Position:</label></td>
+				<td><input readonly type="text" class="phidinfo" size="8" id="$KEY_position"></td>
+			</tr>
+			<tr>
+				<td><label class="phidinfo">Velocity:</label></td>
+				<td><input readonly type="text" class="phidinfo" size="8" id="$KEY_velocity"></td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset class="errorField" id="$KEY_errorField">
+		<legend><label class='phidinfo'>Errors</label></legend>
+		<div id="$KEY_errScroll" class="errScroll">
+			<table class="errorTable" id="$KEY_errorTable">
+				<col width="80">
+				<col width="80">
+				<col width="160">
+				<thead>
+					<tr>
+						<th align='left'><label>Time</label></th>
+						<th align='center'><label>Error #</label></th>
+						<th align='center'><label>Desc</label></th>
+						<th><input type='submit' size='9' class='phidinfo' onclick='$KEY_errClear()' value='Clear'></th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+			</table>
+		</div>
+	</fieldset>
+</body>
+
+</html>

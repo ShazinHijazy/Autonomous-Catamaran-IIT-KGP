@@ -1,0 +1,171 @@
+html,
+body {
+	height: 100%;
+	margin: 0;
+	font-family: Verdana;
+	font-style: normal;
+	font-weight: normal;
+	font-size: 12px;
+	background-color: white;
+}
+
+div.control-panel-wrapper, #controlPanel, div.PhidgetControlPanel {
+	display: flex;
+	flex-flow: column;
+	height: 100%;
+}
+
+div.PhidgetControlPanelHeader {
+	border: 1px solid #333;
+	background-color: #EEEEEE;
+	height: 25px;
+	text-align: center;
+	font-size: 16px;
+	flex-shrink: 0;
+}
+
+div.RequestUSB {
+	position: absolute;
+	top: 3px;
+	left: 5px;
+	display: none;
+}
+
+div.PhidgetControlPanelBody {
+	display: flex;
+	flex: 1 1 auto;
+	height: 100%;
+	flex-direction: column;
+}
+
+div.jstree-grid-midwrapper {
+	height: 100%;
+	width: 100%;
+	-webkit-overflow-scrolling: touch;
+}
+
+div.jstree-grid-column-0 {
+	width: 99%;
+}
+
+div.PhidgetControlPanelFooter {
+	border: 1px solid #333;
+	background-color: #C6C7CF;
+	flex-shrink: 0;
+}
+
+body.class-intro {
+	font-family: Verdana;
+	font-size: 10;
+	font-style: normal;
+	font-weight: normal;
+	background-color: #D6E7FF;
+}
+
+code {
+	font-size: 10pt;
+	font-family: courier;
+	font-weight: bold;
+}
+
+span.cell-right-align {
+	float: right;
+	margin-right: 12px !important;
+}
+
+button.ControlPanel {
+	height: 25px;
+}
+
+legend.phidinfosmall {
+	font-family: Arial, sans-serif;
+	font-size: 75%;
+}
+
+label.phidinfosmall {
+	font-family: Arial, sans-serif;
+	font-size: 75%;
+}
+
+input.phidinfosmall[type='text'] {
+	height: 14px;
+	font-size: 10px;
+}
+
+optgroup {
+	font-size: 10px;
+}
+
+input.phidinfosmall[type='number'] {
+	height: 14px;
+	font-size: 10px;
+}
+
+input.phidinfosmall[type='select'] {
+	height: 14px;
+	font-size: 10px;
+}
+
+input.phidinfosmall[type='submit'] {
+	height: 24px;
+	width: 80px;
+	border-radius: 3px;
+	font-size: 10px;
+}
+
+input.phidinfosmall[type='range'] {
+	width: 180px;
+}
+
+legend.phidinfo {
+	font-family: Arial, sans-serif;
+}
+
+label.phidinfo {
+	font-family: Arial, sans-serif;
+}
+
+input.phidinfo[type='text'] {
+	height: 14px;
+	font-size: 12px;
+}
+
+input.phidinfo[type='submit'] {
+	height: 24px;
+	width: 80px;
+	border-radius: 3px;
+	font-size: 12px;
+}
+
+input.phidinfo[type='range'] {
+	width: 230px;
+}
+
+div.subsection {
+	border-style: ridge;
+	border-color: #CCCCCC;
+}
+
+label.phidrange {
+	width: 100%;
+	font-size: 10px;
+}
+
+td.errTable {
+	font-size: 12px;
+}
+
+td.errTableRed {
+	font-size: 12px;
+	color: red;
+	text-align: center;
+}
+
+div.errScroll {
+	height: 150px;
+	overflow-y: scroll;
+}
+
+fieldset.errorField {
+	display: none;
+}

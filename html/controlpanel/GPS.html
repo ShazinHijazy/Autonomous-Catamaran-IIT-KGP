@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<script>
+	GPSExample = {}
+
+	var $KEY_phid;
+	var $KEY_errOn = false;
+	let dateUpdateInterval;
+
+	GPSExample.setup = function (phid) {
+
+		$KEY_phid = phid;
+
+		phid.onPositionChange = $KEY_onPositionChange;
+		phid.onPositionFixStateChange = $KEY_onPositionFixStateChange;
+		phid.onHeadingChange = $KEY_onHeadingChange;
+		phid.onError = $KEY_onError;
+		$KEY_onPositionFixStateChange(phid.getPositionFixState());
+
+		dateUpdateInterval = setInterval(() => {
+			if (!phid.attached) {
+				clearInterval(dateUpdateInterval);
+				return;
+			}
+
+			try {
+				$('#$KEY_dateLabel').text(phid.dateAndTime);
+			} catch {}
+		}, 100);
+	}
+
+	function $KEY_onDateChange(year, month, day) {
+
+		$('#$KEY_dateLabel').text(month + "/" + day + "/" + year);
+	}
+
+	function $KEY_onTimeChange(hour, min, sec, ms) {
+
+		$('#$KEY_timeLabel').text(hour + ":" + min + ":" + sec + "." + ms);
+	}
+
+	function $KEY_onHeadingChange(heading, velocity) {
+
+		$('#$KEY_vel').val(velocity);
+		$('#$KEY_head').val(heading);
+	}
+
+	function $KEY_onPositionChange(lat, long, alt) {
+
+		$('#$KEY_lat').val(lat);
+		$('#$KEY_long').val(long);
+		$('#$KEY_alt').val(alt);
+	}
+
+	function $KEY_onPositionFixStateChange(state) {
+
+		$('#$KEY_fix').prop('checked', !!state);
+	}
+
+	function $KEY_onError(code, msg) {
+
+		var d = new Date();
+		var h = d.getHours();
+		var m = d.getMinutes();
+		var s = d.getSeconds();
+		var ms = d.getMilliseconds();
+		var tr = $('<tr>');
+
+		tr.append('<td class="errTable"> ' + h + ':' + m + ':' + s + '.' + ms);
+		tr.append('<td class="errTableRed"> 0x' + code.toString(16));
+		tr.append('<td class="errTable">' + msg);
+		$('#$KEY_errorTable').append(tr);
+		$("#$KEY_errScroll").scrollTop($("#$KEY_errScroll")[0].scrollHeight);
+		$("#$KEY_errorField").show();
+	}
+
+	function $KEY_errClear() {
+
+		$('#$KEY_errorTable tbody').remove();
+	}
+
+</script>
+
+<body>
+	<fieldset>
+		<legend><label class="phidinfo">GPS Data</label></legend>
+		<table>
+			<tr>
+				<td colspan="4">
+					<label class="phidinfo">Time and Date: </label><label class="phidinfo" id="$KEY_dateLabel"></label>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<label class="phidinfo">Latitude:</label>
+				</td>
+				<td>
+					<input readonly type="text" size="8" id="$KEY_lat" class="phidinfo" value="0">
+				</td>
+				<td>
+					<label class="phidinfo">Fix Aquired:</label>
+				</td>
+				<td>
+					<input readonly type="checkbox" class="phidinfo" id="$KEY_fix" onclick="this.checked=!this.checked">
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<label class="phidinfo">Longitude:</label>
+				</td>
+				<td>
+					<input readonly type="text" size="8" id="$KEY_long" class="phidinfo" value="0">
+				</td>
+				<td>
+					<label class="phidinfo">Velocity:</label>
+				</td>
+				<td>
+					<input readonly type="text" size="8" id="$KEY_vel" class="phidinfo" value="0">
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<label class="phidinfo">Altitude:</label>
+				</td>
+				<td>
+					<input readonly type="text" size="8" id="$KEY_alt" class="phidinfo" value="0">
+				</td>
+				<td>
+					<label class="phidinfo">Heading:</label>
+				</td>
+				<td>
+					<input readonly type="text" size="8" id="$KEY_head" class="phidinfo" value="0">
+				</td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset class="errorField" id="$KEY_errorField">
+		<legend><label class='phidinfo'>Errors</label></legend>
+		<div id="$KEY_errScroll" class="errScroll">
+			<table class="errorTable" id="$KEY_errorTable">
+				<col width="80">
+				<col width="80">
+				<col width="160">
+				<thead>
+					<tr>
+						<th align='left'><label>Time</label></th>
+						<th align='center'><label>Error #</label></th>
+						<th align='center'><label>Desc</label></th>
+						<th><input type='submit' size='9' class='phidinfo' onclick='$KEY_errClear()' value='Clear'></th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+			</table>
+		</div>
+	</fieldset>
+</body>
+
+</html>

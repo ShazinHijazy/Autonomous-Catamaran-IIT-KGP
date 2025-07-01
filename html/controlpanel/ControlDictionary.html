@@ -1,0 +1,110 @@
+﻿<!DOCTYPE html>
+<script>
+	ControlDictionaryExample = {}
+
+	var $KEY_phid;
+
+	ControlDictionaryExample.setup = function(phid) {
+
+		$KEY_phid = phid;
+		$KEY_updatetables();
+
+		$KEY_keysIntervalID = setInterval($KEY_updatetables, 1000);
+	}
+
+	ControlDictionaryExample.teardown = function(phid) {
+
+		clearInterval($KEY_keysIntervalID);
+	}
+
+	function $KEY_updatetables() {
+
+		Promise.all([$KEY_phid.get('openconnections'), $KEY_phid.get('openchannels')]).then(function(vals) {
+
+			//decode JSON and build table rows
+			var conns = JSON.parse(vals[0]);
+			connsRows = '';
+
+			for(var c in conns.connections) {
+				c = conns.connections[c];
+				connsRows += '<tr>' +
+					'<td>' + c.peer + '</td>' +
+					'<td>' + c.conntype + '</td>' +
+					'<td>' + c.ctime + '</td>' +
+					'<td>' + c.openchannels + '</td>' +
+					'<td>' + c.ioin + '</td>' +
+					'<td>' + c.ioout + '</td>' +
+					'<td>' + c.ioev + '</td>' +
+					'</tr>';
+			}
+
+			$('#$KEY_conns_body').html(connsRows);
+
+			var channels = JSON.parse(vals[1]);
+			channelsRows = '';
+
+			for(var c in channels.channels) {
+				c = channels.channels[c];
+				channelsRows += '<tr>' +
+					'<td>' + c.name + '</td>' +
+					'<td>' + c.sn + '</td>' +
+					'<td>' + c.port + '</td>' +
+					'<td>' + c.ch + '</td>' +
+					'<td>' + c.ishubport + '</td>' +
+					'</tr>';
+			}
+
+			$('#$KEY_channels_body').html(channelsRows);
+		}).catch(function(err) {
+			clearInterval($KEY_keysIntervalID);
+			console.error('dictionary get failed', err);
+		});
+	}
+
+</script>
+<style>
+	table.data, table.data th, table.data td {
+		border: 1px solid black;
+		border-collapse: collapse;
+	}
+
+	table.data th, table.data td {
+		padding: 5px;
+	}
+</style>
+<html>
+<body>
+	<fieldset>
+		<legend>Open Connections</legend>
+		<table id="$KEY_conns" class="data">
+			<thead>
+				<tr>
+					<td>Client</td>
+					<td>Type</td>
+					<td>Connected</td>
+					<td>Open Channels</td>
+					<td>I/O In</td>
+					<td>I/O Out</td>
+					<td>Events</td>
+				</tr>
+			</thead>
+			<tbody id="$KEY_conns_body"></tbody>
+		</table>
+	</fieldset>
+	<fieldset>
+		<legend>Open Channels</legend>
+		<table id="$KEY_channels" class="data">
+			<thead>
+				<tr>
+					<td>Name</td>
+					<td>Serial #</td>
+					<td>Hub Port</td>
+					<td>Channel</td>
+					<td>isHubPort</td>
+				</tr>
+			</thead>
+			<tbody id="$KEY_channels_body"></tbody>
+		</table>
+	</fieldset>
+</body>
+</html>

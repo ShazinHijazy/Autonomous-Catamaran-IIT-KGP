@@ -1,0 +1,40 @@
+﻿<!DOCTYPE html>
+<html>
+<script>
+	WriteLabelExample = {}
+
+	var $KEY_phid;
+
+	WriteLabelExample.setup = function(phid) {
+
+		$KEY_phid = phid;
+	}
+
+	function $KEY_writeLabel() {
+		var lbl = $('#$KEY_lbl').val();
+		$KEY_phid.writeDeviceLabel(lbl).then(function() {
+			$('#$KEY_result').text("Success");
+		}).catch(function(err) {
+			if(err.errorCode === phidget22.ErrorCode.UNSUPPORTED)
+				$('#$KEY_result').html("Set label is unsupported.<br>Some devices must have their label set on a non-Windows machine.");
+			else if(err.errorCode === phidget22.ErrorCode.INVALIDARG)
+				$('#$KEY_result').html("Invalid label.<br>Label can be at most 10 UTF-16 code units.");
+			else
+				$('#$KEY_result').text("Failed to set label: " + err.message);
+		});
+	}
+
+</script>
+<body>
+	<fieldset>
+		<legend>Write Device Label</legend>
+		<table>
+			<tr>
+				<td><input type='text' class='phidinfosmall' id='$KEY_lbl' size='10' value=''></td>
+				<td><input type='submit' style="width:70px" class='phidinfosmall' onclick='$KEY_writeLabel()' value='Write'></td>
+			</tr>
+		</table>
+		<span id="$KEY_result"></span>
+	</fieldset>
+</body>
+</html>

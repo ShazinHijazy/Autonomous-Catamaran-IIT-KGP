@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<script>
+	IRExample = {
+		width: 520
+	}
+
+	var $KEY_phid;
+	var $KEY_learned = {};
+	var $KEY_errOn = false;
+
+	IRExample.setup = function (phid) {
+
+		$KEY_phid = phid;
+		phid.onCode = $KEY_onCode;
+		phid.onLearn = $KEY_onLearn;
+		phid.onError = $KEY_onError;
+		phid.onRawData = $KEY_onRawData;
+
+		phid.transmitRepeatSuccess = function (vl) {
+			//    console.log("transmitRepeat success");
+		};
+	}
+
+	var $KEY_onRawData = function (data, dataLength) {
+
+		var oldtxt = $("#$KEY_rawData").val();
+		$("#$KEY_rawData").val(oldtxt + data + "\n");
+		$("#$KEY_rawData").scrollTop($("#$KEY_rawData")[0].scrollHeight);
+	}
+
+	var $KEY_onLearn = function (code, codeInfo) {
+
+		$KEY_learned.code = code;
+		$KEY_learned.codeInfo = codeInfo;
+		$KEY_learned.isNew = true;
+
+		$KEYsetLabel('lcode', code);
+		$KEYsetLabel('lbitCount', codeInfo.bitCount);
+		$KEYsetLabel('lencoding', phidget22.IRCodeEncoding[codeInfo.encoding]);
+		$KEYsetLabel('lgap', codeInfo.gap);
+		$KEYsetLabel('lzero', codeInfo.zero.join(', '));
+		$KEYsetLabel('lone', codeInfo.one.join(', '));
+		$KEYsetLabel('lheader', codeInfo.header.join(', '));
+		$KEYsetLabel('lrepeat', codeInfo.repeat.join(', '));
+		if (codeInfo.toggleMask.length > 0)
+			$KEYsetLabel('ltoggle', codeInfo.toggleMask);
+		else
+			$KEYsetLabel('ltoggle', 'No Toggle Mask');
+		$('#$KEY_sendLearn').removeAttr('disabled');
+	}
+
+	var $KEY_onCode = function (code, bitCount, isRepeat) {
+
+		$KEYsetLabel('code', code);
+		$KEYsetLabel('bitCount', bitCount);
+
+		if (isRepeat) {
+			var cnt = Number($('#$KEY_codeCount').text());
+			if (isNaN(cnt))
+				$KEYsetLabel('codeCount', 1);
+			else
+				$KEYsetLabel('codeCount', cnt + 1);
+		} else {
+			$KEYsetLabel('codeCount', 1);
+		}
+	}
+
+	function $KEY_testRawTransmit() {
+
+		var data;
+		var carrierFrequency = 38000;
+		var dutyCycle = 0.5;
+		var gap = 108966;
+
+		data = [
+			9110, 4580, 570, 610, 570,
+			1730, 580, 1720, 580, 1730, 580, 590, 570,
+			1730, 580, 1730, 570, 1730, 580, 1730,
+			570, 1730, 580, 1720, 580, 600, 570, 600, 580,
+			600, 570, 600, 570, 1740, 580, 1720, 580,
+			1730, 580, 590, 580, 1730, 570, 600, 580, 590, 580, 600, 570,
+			600, 580, 1730, 570, 1730, 580, 1720, 580,
+			1730, 580, 590, 570, 610, 570, 600, 580, 590, 590];
+
+		$KEY_phid.transmitRaw(data, carrierFrequency, dutyCycle, gap);
+	}
+
+	function $KEY_testTransmit() {
+
+		var codeInfo = {
+			bitCount: 32,
+			encoding: phidget22.IRCodeEncoding.SPACE,
+			zero: [580, 580],
+			one: [580, 1710],
+			header: [9080, 4550],
+			trail: 580,
+			gap: 108500,
+			repeat: [2000, 3000, 2500]
+		}
+
+		$KEY_phid.transmit("deadbeef", codeInfo);
+		$KEY_phid.transmitRepeat();
+		$KEY_phid.transmitRepeat();
+		$KEY_phid.transmitRepeat();
+		$KEY_phid.transmitRepeat();
+		$KEY_phid.transmitRepeat();
+	}
+
+	function $KEY_sendLearn() {
+
+		if ($KEY_learned.isNew) {
+			$KEY_phid.transmit($KEY_learned.code, $KEY_learned.codeInfo, function () {
+				//	console.log('transmit complete');
+			});
+			$KEY_learned.isNew = false;
+		} else {
+			$KEY_phid.transmitRepeat(function () {
+				//	console.log('transmit repeat complete');
+			});
+		}
+	}
+
+	var $KEYsetLabel = function (id, txt) {
+
+		$('#$KEY_' + id).text(txt);
+	}
+
+	function $KEY_onError(code, msg) {
+
+		var d = new Date();
+		var h = d.getHours();
+		var m = d.getMinutes();
+		var s = d.getSeconds();
+		var ms = d.getMilliseconds();
+		var tr = $('<tr>');
+
+		tr.append('<td class="errTable"> ' + h + ':' + m + ':' + s + '.' + ms);
+		tr.append('<td class="errTableRed"> 0x' + code.toString(16));
+		tr.append('<td class="errTable">' + msg);
+		$('#$KEY_errorTable').append(tr);
+		$("#$KEY_errScroll").scrollTop($("#$KEY_errScroll")[0].scrollHeight);
+		$("#$KEY_errorField").show();
+	}
+
+	function $KEY_errClear() {
+
+		$('#$KEY_errorTable tbody').remove();
+	}
+
+</script>
+
+<body>
+	<fieldset>
+		<legend><label class='phidinfo'>Code</label></legend>
+		<table>
+			<tr>
+				<td><label class='phidinfo'>IR Code:</label></td>
+				<td><label class='phidinfo' id="$KEY_code">0</label></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>Repeat Count:</label></td>
+				<td><label class='phidinfo' id="$KEY_codeCount">0</label></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>Bit Count:</label></td>
+				<td><label class='phidinfo' id="$KEY_bitCount">0</label></td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset>
+		<legend><label class='phidinfo'>Learn</label></legend>
+		<table>
+			<tr>
+				<td><label class='phidinfo'>IR Code:</label></td>
+				<td><label class='phidinfo' id="$KEY_lcode">0</label></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>Bit Count:</label></td>
+				<td><label class='phidinfo' id="$KEY_lbitCount">0</label></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>Encoding:</label></td>
+				<td><label class='phidinfo' id="$KEY_lencoding">0</label></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>Gap:</label></td>
+				<td><label class='phidinfo' id="$KEY_lgap">0</label></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>Zero:</label></td>
+				<td><label class='phidinfo' id="$KEY_lzero">0</label></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>One:</label></td>
+				<td><label class='phidinfo' id="$KEY_lone">0</label></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>Header:</label></td>
+				<td><label class='phidinfo' id="$KEY_lheader">0</label></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>Repeat:</label></td>
+				<td><label class='phidinfo' id="$KEY_lrepeat">0</label></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>Toggle Mask:</label></td>
+				<td><label class='phidinfo' id="$KEY_ltoggle">0</label></td>
+			</tr>
+			<tr>
+				<td colspan="2">
+					<input disabled type="submit" class="phidinfo" id="$KEY_sendLearn" onclick="$KEY_sendLearn()"
+						value="Send">
+				</td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset>
+		<legend><label class='phidinfo'>Raw Data</label></legend>
+		<textarea id="$KEY_rawData" readonly rows="16" cols="70" style="font-size:10px"></textarea>
+		<input type="submit" class="phidinfo" onclick="$KEY_testRawTransmit()" style="width:125px"
+			value="Test Raw Transmit">
+		<input type="submit" class="phidinfo" onclick="$KEY_testTransmit()" style="width:125px" value="Test Transmit">
+	</fieldset>
+	<fieldset class="errorField" id="$KEY_errorField">
+		<legend><label class='phidinfo'>Errors</label></legend>
+		<div id="$KEY_errScroll" class="errScroll">
+			<table class="errorTable" id="$KEY_errorTable">
+				<col width="80">
+				<col width="80">
+				<col width="160">
+				<thead>
+					<tr>
+						<th align='left'><label>Time</label></th>
+						<th align='center'><label>Error #</label></th>
+						<th align='center'><label>Desc</label></th>
+						<th><input type='submit' class='phidinfo' onclick='$KEY_errClear()' value='Clear'></th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+			</table>
+		</div>
+	</fieldset>
+</body>
+
+</html>

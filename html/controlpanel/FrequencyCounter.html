@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<script>
+	FrequencyCounterExample = {}
+
+	var $KEY_phid;
+	var $KEY_errOn = false;
+
+	FrequencyCounterExample.setup = function(phid) {
+
+		$KEY_phid = phid;
+		phid.onFrequencyChange = $KEY_freqChange;
+		phid.onCountChange = $KEY_countChange;
+		phid.onError = $KEY_onError;
+		phid.onPropertyChange = $KEY_propChange;
+
+		switch(phid.getDeviceID()) {
+			case phidget22.DeviceID.PN_DAQ1400:
+				$('#$KEY_filterLabel').hide();
+				$('#$KEY_filterCombo').hide();
+				$('#$KEY_modeCombo').removeAttr("hidden");
+				$('#$KEY_modeLabel').removeAttr("hidden");
+				$('#$KEY_supplyLabel').removeAttr("hidden");
+				$('#$KEY_supplyCombo').removeAttr("hidden");
+				$("#$KEY_enableBox").attr('disabled', 'disabled');
+				$('#$KEY_supplyCombo').val(phid.getPowerSupply());
+				$('#$KEY_modeCombo').val(phid.getInputMode());
+				phid.reset();
+				break;
+			default:
+				$KEY_resetCount();
+				break;
+		}
+
+		$('#$KEY_enableBox').prop("checked", phid.getEnabled());
+		$('#$KEY_cutoff').val(phid.getFrequencyCutoff());
+		$('#$KEY_filterCombo').val(phid.getFilterType());
+
+	}
+
+	function $KEY_propChange(prop) {
+
+		if(prop === 'DataInterval')
+			$('#$KEY_di').val(this.getDataInterval());
+
+		if(prop === 'Enabled')
+			$('#$KEY_enableBox').prop("checked", this.getEnabled());
+
+		if(prop === 'FilterType')
+			$('#$KEY_filterCombo').val(this.getFilterType());
+
+		if(prop === 'FrequencyCutoff')
+			$('#$KEY_cutoff').val(this.getFrequencyCutoff());
+
+		if(prop === 'InputMode')
+			$('#$KEY_modeCombo').val(this.getInputMode());
+
+		if(prop === 'PowerSupply')
+			$('#$KEY_supplyCombo').val(this.getPowerSupply());
+	}
+
+	function $KEY_freqChange(freq) {
+
+		$('#$KEY_frequency').val(freq);
+	}
+
+	function $KEY_modeChange() {
+
+		$KEY_phid.setInputMode($('#$KEY_modeCombo').val());
+	}
+
+	function $KEY_enableChange() {
+
+		$KEY_phid.setEnabled($('#$KEY_enableBox')[0].checked);
+		setTimeout(function() {
+			$KEY_phid.resetCount();
+			$('#$KEY_count').val(0);
+		}, 100);
+	}
+
+	function $KEY_countChange(ticks, counts, ticksAtLastCount) {
+
+		$('#$KEY_count').val($KEY_phid.getCount());
+		$('#$KEY_time').val(($KEY_phid.getTimeElapsed() / 1000));
+	}
+
+	function $KEY_onError(code, msg) {
+
+		var d = new Date();
+		var h = d.getHours();
+		var m = d.getMinutes();
+		var s = d.getSeconds();
+		var ms = d.getMilliseconds();
+		var tr = $('<tr>');
+
+		tr.append('<td class="errTable"> ' + h + ':' + m + ':' + s + '.' + ms);
+		tr.append('<td class="errTableRed"> 0x' + code.toString(16));
+		tr.append('<td class="errTable">' + msg);
+		$('#$KEY_errorTable').append(tr);
+		$("#$KEY_errScroll").scrollTop($("#$KEY_errScroll")[0].scrollHeight);
+		$("#$KEY_errorField").show();
+	}
+
+	function $KEY_errClear() {
+
+		$('#$KEY_errorTable tbody').remove();
+	}
+
+	function $KEY_setCutoff() {
+
+		$KEY_phid.setFrequencyCutoff($('#$KEY_cutoff').val());
+	}
+
+	function $KEY_resetCount() {
+		$KEY_phid.resetCount();
+		$('#$KEY_time').val(0);
+		setTimeout(function() {
+			$('#$KEY_count').val($KEY_phid.getCount());
+		}, 40);
+
+	}
+
+
+	function $KEY_filterChange() {
+
+		$KEY_phid.setFilterType($('#$KEY_filterCombo').val());
+	}
+
+	function $KEY_supplyChange() {
+
+		$KEY_phid.setPowerSupply($('#$KEY_supplyCombo').val());
+	}
+
+</script>
+<body>
+	<fieldset>
+		<legend><label class='phidinfo'>Settings</label></legend>
+		<table>
+			<tr>
+				<td><label class='phidinfo'>Frequency Cutoff: </label></td>
+				<td><input type='text' class='phidinfo' id='$KEY_cutoff' size='7' value='1'></td>
+				<td><input type='submit' size='9' class='phidinfo' onclick='$KEY_setCutoff()' value='Set'></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>Enabled:</label></td>
+				<td><input type="checkbox" id='$KEY_enableBox' onChange="$KEY_enableChange()" value="0"></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo' id='$KEY_filterLabel'>Filter Type:</label></td>
+				<td colspan="2">
+					<select class='phidinfo' onChange='$KEY_filterChange()' id='$KEY_filterCombo' value="0">
+						<option value="1">Zero-Crossing</option>
+						<option value="2">Logic Level</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td align="right"><label class='phidinfo' hidden="hidden" id='$KEY_modeLabel'>Mode:</label></td>
+				<td>
+					<select class='phidinfo' hidden="hidden" onChange='$KEY_modeChange()' id='$KEY_modeCombo' value="0">
+						<option value="1">NPN</option>
+						<option value="2">PNP</option>
+					</select>
+				</td>
+				<td><label class='phidinfo' hidden="hidden" id='$KEY_supplyLabel'>Power Supply:</label></td>
+				<td>
+					<select class='phidinfo' hidden="hidden" onChange='$KEY_supplyChange()' id='$KEY_supplyCombo' value="0">
+						<option value="1">OFF</option>
+						<option value="2">12V</option>
+						<option value="3">24V</option>
+					</select>
+				</td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset>
+		<legend><label class='phidinfo'>Data</label></legend>
+		<table>
+			<tr>
+				<td align="center"><label class='phidinfo'>Frequency</label></td>
+				<td align="center"><label class='phidinfo'>Total Count</label></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td align="center"><input type='text' class='phidinfo' id='$KEY_frequency' size='5' value=''>Hz</td>
+				<td align="center"><input type='text' class='phidinfo' id='$KEY_count' size='7' value=''></td>
+				<td><input type='submit' style="width:100px" id='$KEY_resetButton' class='phidinfo' onclick='$KEY_resetCount()' value='Reset Count'></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>Time Elapsed:</label></td>
+				<td><input type='text' class='phidinfo' id='$KEY_time' size='15' value=''> s</td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset class="errorField" id="$KEY_errorField">
+		<legend><label class='phidinfo'>Errors</label></legend>
+		<div id="$KEY_errScroll" class="errScroll">
+			<table class="errorTable" id="$KEY_errorTable">
+				<col width="80">
+				<col width="80">
+				<col width="160">
+				<thead>
+					<tr>
+						<th align='left'><label>Time</label></th>
+						<th align='center'><label>Error #</label></th>
+						<th align='center'><label>Desc</label></th>
+						<th><input type='submit' size='9' class='phidinfo' onclick='$KEY_errClear()' value='Clear'></th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+			</table>
+		</div>
+	</fieldset>
+</body>
+</html>

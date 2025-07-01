@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<script>
+	ResistanceInputExample = {}
+
+	var $KEY_phid;
+	var $KEY_errOn = false;
+
+	ResistanceInputExample.setup = function(phid) {
+
+		$KEY_phid = phid;
+
+		$('#$KEY_di').val(phid.getDataInterval());
+		$('#$KEY_ct').val(phid.getResistanceChangeTrigger());
+		$('#$KEY_rtdWireCombo').val(phid.getRTDWireSetup());
+
+		phid.onError = $KEY_onError;
+		phid.onResistanceChange = $KEY_onResChange;
+		phid.onPropertyChange = $KEY_propChange;
+	}
+
+	function $KEY_propChange(prop) {
+
+		if(prop === 'DataInterval')
+			$('#$KEY_di').val(this.getDataInterval());
+
+		if(prop === 'ResistanceChangeTrigger')
+			$('#$KEY_ct').val(this.getResistanceChangeTrigger());
+
+		if(prop === 'RTDWireSetup')
+			$('#$KEY_rtdWireCombo').val(this.getRTDWireSetup());
+	}
+
+	function $KEY_setDI() {
+
+		var di = Number($('#$KEY_di').val());
+		if(isNaN(di))
+			return (false);
+
+		if(di < $KEY_phid.getMinDataInterval()) {
+			di = $KEY_phid.getMinDataInterval();
+			$('#$KEY_di').val(di);
+		}
+
+		if(di > $KEY_phid.getMaxDataInterval()) {
+			di = $KEY_phid.getMaxDataInterval();
+			$('#$KEY_di').val(di);
+		}
+
+		$KEY_phid.setDataInterval(di);
+		return (false);
+	}
+
+	function $KEY_setCT() {
+
+		var ct = Number($('#$KEY_ct').val());
+		if(isNaN(ct))
+			return (false);
+
+		$KEY_phid.setResistanceChangeTrigger(ct);
+		return (false);
+	}
+
+	function $KEY_rtdWireChange() {
+
+		$KEY_phid.setRTDWireSetup($('#$KEY_rtdWireCombo').val());
+	}
+
+	function $KEY_onResChange(res) {
+
+		$('#$KEY_resistance').val(res);
+	}
+
+	function $KEY_onError(code, msg) {
+
+		var d = new Date();
+		var h = d.getHours();
+		var m = d.getMinutes();
+		var s = d.getSeconds();
+		var ms = d.getMilliseconds();
+		var tr = $('<tr>');
+
+		tr.append('<td class="errTable"> ' + h + ':' + m + ':' + s + '.' + ms);
+		tr.append('<td class="errTableRed"> 0x' + code.toString(16));
+		tr.append('<td class="errTable">' + msg);
+		$('#$KEY_errorTable').append(tr);
+		$("#$KEY_errScroll").scrollTop($("#$KEY_errScroll")[0].scrollHeight);
+		$("#$KEY_errorField").show();
+	}
+
+	function $KEY_errClear() {
+
+		$('#$KEY_errorTable tbody').remove();
+	}
+
+</script>
+<body>
+	<fieldset>
+		<legend><label class='phidinfo'>Settings</label></legend>
+		<table>
+			<tr>
+				<td><label class='phidinfo'>Data Interval</label></td>
+				<td><input type='text' class='phidinfo' id='$KEY_di' size='7' value='30'></td>
+				<td><input type='submit' size='9' class='phidinfo' onclick='$KEY_setDI()' value='Set'></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>Change Trigger</label></td>
+				<td><input type='text' class='phidinfo' id='$KEY_ct' size='7' value='0.0'></td>
+				<td><input type='submit' size='9' id="$KEY_ctButton" class='phidinfo' onclick='$KEY_setCT()' value='Set'></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>RTD Type:</label></td>
+				<td colspan="2" align="left">
+					<select class='phidinfo' onChange='$KEY_rtdWireChange()' id='$KEY_rtdWireCombo'>
+						<option value="1">2-Wire</option>
+						<option value="2" selected="selected">3-Wire</option>
+						<option value="3">4-Wire</option>
+					</select>
+				</td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset>
+		<legend><label class='phidinfo'>Resistance Input</label></legend>
+		<table>
+			<tr>
+				<td style="text-align:center"><label class='phidinfo'>Resistance</label></td>
+			</tr>
+			<tr>
+				<td><input readonly type="text" size='6' id='$KEY_resistance' class="phid" value="0">&Omega;</td>
+			</tr>
+		</table>
+		<br />
+	</fieldset>
+	<fieldset class="errorField" id="$KEY_errorField">
+		<legend><label class='phidinfo'>Errors</label></legend>
+		<div id="$KEY_errScroll" class="errScroll">
+			<table class="errorTable" id="$KEY_errorTable">
+				<col width="80">
+				<col width="80">
+				<col width="160">
+				<thead>
+					<tr>
+						<th align='left'><label>Time</label></th>
+						<th align='center'><label>Error #</label></th>
+						<th align='center'><label>Desc</label></th>
+						<th><input type='submit' size='9' class='phidinfo' onclick='$KEY_errClear()' value='Clear'></th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+			</table>
+		</div>
+	</fieldset>
+</body>
+</html>

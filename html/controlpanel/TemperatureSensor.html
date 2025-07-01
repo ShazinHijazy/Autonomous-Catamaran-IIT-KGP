@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<script>
+	TemperatureSensorExample = {}
+
+	var $KEY_phid;
+	var $KEY_errOn = false;
+
+	TemperatureSensorExample.setup = function (phid) {
+
+		$KEY_phid = phid;
+
+		phid.onError = $KEY_onError;
+		phid.onTemperatureChange = $KEY_onTempChange;
+		phid.onPropertyChange = $KEY_propChange;
+
+		switch (phid.channelSubclass) {
+			case phidget22.ChannelSubclass.NONE:
+				$('#$KEY_rtdField').hide();
+				$('#$KEY_tcField').hide();
+				break;
+
+			case phidget22.ChannelSubclass.TEMPERATURE_SENSOR_RTD:
+				$('#$KEY_tcField').hide();
+				$('#$KEY_ambField').hide();
+				$('#$KEY_rtdTypeCombo').val(phid.getRTDType());
+				$('#$KEY_rtdWireCombo').val(phid.getRTDWireSetup());
+				break;
+
+			case phidget22.ChannelSubclass.TEMPERATURE_SENSOR_THERMOCOUPLE:
+				$('#$KEY_ambField').hide();
+				$('#$KEY_rtdField').hide();
+				$('#$KEY_typeCombo').val(phid.getThermocoupleType());
+				break;
+		}
+
+		$('#$KEY_di').val(phid.getDataInterval());
+		$('#$KEY_ct').val(phid.getTemperatureChangeTrigger());
+	}
+
+	function $KEY_propChange(prop) {
+
+		if (prop === 'DataInterval')
+			$('#$KEY_di').val(this.getDataInterval());
+
+		if (prop === 'TemperatureChangeTrigger')
+			$('#$KEY_ct').val(this.getTemperatureChangeTrigger());
+
+		if (prop === 'RTDType')
+			$('#$KEY_rtdTypeCombo').val(this.getRTDType());
+
+		if (prop === 'RTDWireSetup')
+			$('#$KEY_rtdWireCombo').val(this.getRTDWireSetup());
+
+		if (prop === 'ThermocoupleType')
+			$('#$KEY_typeCombo').val(this.getThermocoupleType());
+
+		if (prop === 'DeviceLabel')
+			$('#$KEY_labelValue').text(this.getDeviceLabel());
+	}
+
+	function $KEY_setDI() {
+
+		var di = Number($('#$KEY_di').val());
+		if(isNaN(di))
+			return (false);
+
+		if (di < $KEY_phid.getMinDataInterval()) {
+			di = $KEY_phid.getMinDataInterval();
+			$('#$KEY_di').val(di);
+		}
+
+		if (di > $KEY_phid.getMaxDataInterval()) {
+			di = $KEY_phid.getMaxDataInterval();
+			$('#$KEY_di').val(di);
+		}
+
+		$KEY_phid.setDataInterval(di);
+		return (false);
+	}
+
+	function $KEY_setCT() {
+
+		var ct = Number($('#$KEY_ct').val());
+		if(isNaN(ct))
+			return (false);
+
+		$KEY_phid.setTemperatureChangeTrigger(ct);
+		return (false);
+	}
+
+	function $KEY_rtdTypeChange() {
+
+		$KEY_phid.setRTDType($('#$KEY_rtdTypeCombo').val());
+	}
+
+	function $KEY_rtdWireChange() {
+
+		$KEY_phid.setRTDWireSetup($('#$KEY_rtdWireCombo').val());
+	}
+
+	function $KEY_typeChange() {
+
+		$KEY_phid.setThermocoupleType($('#$KEY_typeCombo').val());
+	}
+
+	function $KEY_onError(code, msg) {
+
+		var d = new Date();
+		var h = d.getHours();
+		var m = d.getMinutes();
+		var s = d.getSeconds();
+		var ms = d.getMilliseconds();
+		var tr = $('<tr>');
+
+		tr.append('<td class="errTable"> ' + h + ':' + m + ':' + s + '.' + ms);
+		tr.append('<td class="errTableRed"> 0x' + code.toString(16));
+		tr.append('<td class="errTable">' + msg);
+		$('#$KEY_errorTable').append(tr);
+		$("#$KEY_errScroll").scrollTop($("#$KEY_errScroll")[0].scrollHeight);
+		$("#$KEY_errorField").show();
+	}
+
+	function $KEY_errClear() {
+
+		$('#$KEY_errorTable tbody').remove();
+	}
+
+	function $KEY_onTempChange(tmp) {
+
+		$('#$KEY_TMP').val(tmp);
+		$('#$KEY_tcTMP').val(tmp);
+		$('#$KEY_rtdTMP').val(tmp);
+	}
+
+</script>
+
+<body>
+	<fieldset>
+		<legend><label class='phidinfo'>Settings</label></legend>
+		<table>
+			<tr>
+				<td><label class='phidinfo'>Data Interval</label></td>
+				<td><input type='text' class='phidinfo' id='$KEY_di' size='7' value='30'></td>
+				<td><input type='submit' size='9' id="$KEY_diButton" class='phidinfo' onclick='$KEY_setDI()'
+						value='Set'></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>Change Trigger</label></td>
+				<td><input type='text' class='phidinfo' id='$KEY_ct' size='7' value='0.0'></td>
+				<td><input type='submit' size='9' id="$KEY_ctButton" class='phidinfo' onclick='$KEY_setCT()'
+						value='Set'></td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset id="$KEY_ambField">
+		<legend><label class='phidinfo'>Temperature Sensor</label></legend>
+		<table>
+			<tr>
+				<td style="text-align:center"><label class='phidinfo'>Temperature</label></td>
+			</tr>
+			<tr>
+				<td><input readonly type="text" size='6' id='$KEY_TMP' class="phid" value="0">&degC</td>
+			</tr>
+			<tr>
+				<td><label id='$KEY_err' style="color:#FF0000; display:none"></label></td>
+			</tr>
+		</table>
+		<br />
+	</fieldset>
+	<fieldset id="$KEY_tcField">
+		<legend><label class='phidinfo'>Thermocouple</label></legend>
+		<table>
+			<tr>
+				<td style="text-align:center"><label class='phidinfo'>Temperature</label></td>
+				<td style="text-align:center"><label class='phidinfo'>Thermocouple Type</label></td>
+			</tr>
+			<tr>
+				<td><input readonly type="text" size='6' id='$KEY_tcTMP' class="phid" value="0">&degC</td>
+				<td align="right">
+					<select class='phidinfo' onChange='$KEY_typeChange()' id='$KEY_typeCombo'>
+						<option value="1">J</option>
+						<option value="2" selected="selected">K</option>
+						<option value="3">E</option>
+						<option value="4">T</option>
+					</select>
+				</td>
+			</tr>
+		</table>
+		<br />
+	</fieldset>
+	<fieldset id="$KEY_rtdField">
+		<legend><label class='phidinfo'>RTD</label></legend>
+		<table>
+			<tr>
+				<td style="text-align:center"><label class='phidinfo'>Temperature</label></td>
+			</tr>
+			<tr>
+				<td><input readonly type="text" size='6' id='$KEY_rtdTMP' class="phid" value="0">&degC</td>
+			</tr>
+			<tr>
+				<td style="text-align:center"><label class='phidinfo'>RTD Type:</label></td>
+				<td align="left">
+					<select class='phidinfo' onChange='$KEY_rtdTypeChange()' id='$KEY_rtdTypeCombo'>
+						<option value="1">PT100 (3850ppm)</option>
+						<option value="2">PT1000 (3850ppm)</option>
+						<option value="3">PT100 (3920ppm)</option>
+						<option value="4">PT1000 (3920ppm)</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td style="text-align:center"><label class='phidinfo'>RTD Wiring:</label></td>
+				<td align="left">
+					<select class='phidinfo' onChange='$KEY_rtdWireChange()' id='$KEY_rtdWireCombo'>
+						<option value="1">2-Wire</option>
+						<option value="2" selected="selected">3-Wire</option>
+						<option value="3">4-Wire</option>
+					</select>
+				</td>
+			</tr>
+		</table>
+		<br />
+	</fieldset>
+	<fieldset class="errorField" id="$KEY_errorField">
+		<legend><label class='phidinfo'>Errors</label></legend>
+		<div id="$KEY_errScroll" class="errScroll">
+			<table class="errorTable" id="$KEY_errorTable">
+				<col width="80">
+				<col width="80">
+				<col width="160">
+				<thead>
+					<tr>
+						<th align='left'><label>Time</label></th>
+						<th align='center'><label>Error #</label></th>
+						<th align='center'><label>Desc</label></th>
+						<th><input type='submit' size='9' class='phidinfo' onclick='$KEY_errClear()' value='Clear'></th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+			</table>
+		</div>
+	</fieldset>
+</body>
+
+</html>

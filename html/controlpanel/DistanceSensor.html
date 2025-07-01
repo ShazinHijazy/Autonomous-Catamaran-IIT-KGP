@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<script>
+	DistanceSensorExample = {}
+
+	var $KEY_phid;
+	var $KEY_errOn = false;
+
+	DistanceSensorExample.setup = function(phid) {
+
+		$KEY_phid = phid;
+
+		switch(phid.getDeviceID()) {
+			case phidget22.DeviceID.PN_DST1000:
+			case phidget22.DeviceID.PN_DST1001:
+				$('#$KEY_sonarField').hide();
+				$('#$KEY_quietBox').hide();
+				$('#$KEY_quietLabel').hide();
+				break;
+			case phidget22.DeviceID.PN_DST1200:
+				$('#$KEY_quietBox').prop("checked", phid.getSonarQuietMode());
+				break;
+			default:
+				break;
+		}
+
+
+		$('#$KEY_di').val(phid.getDataInterval());
+		$('#$KEY_ct').val(phid.getDistanceChangeTrigger());
+
+
+		phid.onDistanceChange = $KEY_dstChange;
+		phid.onSonarReflectionsUpdate = $KEY_sonChange;
+		phid.onError = $KEY_onError;
+		phid.onPropertyChange = $KEY_propChange;
+	}
+
+	function $KEY_propChange(prop) {
+
+		if(prop === 'DataInterval')
+			$('#$KEY_di').val(this.getDataInterval());
+
+		if(prop === 'DistanceChangeTrigger')
+			$('#$KEY_ct').val(this.getDistanceChangeTrigger());
+
+		if(prop === 'SonarQuietMode')
+			$('#$KEY_quietBox').prop("checked", this.getSonarQuietMode());
+	}
+
+	function $KEY_onError(code, msg) {
+
+		var d = new Date();
+		var h = d.getHours();
+		var m = d.getMinutes();
+		var s = d.getSeconds();
+		var ms = d.getMilliseconds();
+		var tr = $('<tr>');
+
+		tr.append('<td class="errTable"> ' + h + ':' + m + ':' + s + '.' + ms);
+		tr.append('<td class="errTableRed"> 0x' + code.toString(16));
+		tr.append('<td class="errTable">' + msg);
+		$('#$KEY_errorTable').append(tr);
+		$("#$KEY_errScroll").scrollTop($("#$KEY_errScroll")[0].scrollHeight);
+		$("#$KEY_errorField").show();
+	}
+
+	function $KEY_errClear() {
+
+		$('#$KEY_errorTable tbody').remove();
+	}
+
+	function $KEY_dstChange(dst) {
+
+		$('#$KEY_DST').val(dst);
+	}
+
+	function $KEY_sonChange(dist, amp, count) {
+
+		for(i = 0; i < count; i++) {
+			$('#$KEY_dst' + i).text(dist[i].toFixed(2));
+			$('#$KEY_amp' + i).text(amp[i].toFixed(2));
+		}
+	}
+
+	function $KEY_quietChange() {
+
+		$KEY_phid.setSonarQuietMode($('#$KEY_quietBox')[0].checked);
+	}
+
+	function $KEY_setDI() {
+
+		var di = Number($('#$KEY_di').val());
+		if(isNaN(di))
+			return (false);
+
+		if(di < $KEY_phid.getMinDataInterval()) {
+			di = $KEY_phid.getMinDataInterval();
+			$('#$KEY_di').val(di);
+		}
+
+		if(di > $KEY_phid.getMaxDataInterval()) {
+			di = $KEY_phid.getMaxDataInterval();
+			$('#$KEY_di').val(di);
+		}
+
+		$KEY_phid.setDataInterval(di);
+		return (false);
+	}
+
+	function $KEY_setCT() {
+
+		var ct = Number($('#$KEY_ct').val());
+		if(isNaN(ct))
+			return (false);
+
+		$KEY_phid.setDistanceChangeTrigger(ct);
+		return (false);
+	}
+
+</script>
+<body>
+	<fieldset>
+		<legend><label class='phidinfo'>Settings</label></legend>
+		<table>
+			<tr>
+				<td><label class='phidinfo'>Data Interval</label></td>
+				<td><input type='text' class='phidinfo' id='$KEY_di' size='7' value='30'></td>
+				<td><input type='submit' size='9' class='phidinfo' onclick='$KEY_setDI()' value='Set'></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>Change Trigger</label></td>
+				<td><input type='text' class='phidinfo' id='$KEY_ct' size='7' value='0.0'></td>
+				<td><input type='submit' size='9' class='phidinfo' onclick='$KEY_setCT()' value='Set'></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo' id="$KEY_quietLabel">Quiet Mode:</label></td>
+				<td><input type="checkbox" id='$KEY_quietBox' onChange="$KEY_quietChange()" value="0"></td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset>
+		<legend><label class='phidinfo'>Distance Sensor</label></legend>
+		<table>
+			<tr>
+				<td align='left'><label>Distance</label></td>
+			</tr>
+			<tr>
+				<td><input readonly type="text" size="8" id='$KEY_DST' class="phid" value="0"> mm</td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset class="sonarField" id="$KEY_sonarField">
+		<legend><label class='phidinfo'>Sonar Reflections</label></legend>
+		<table>
+			<tr>
+				<th><label class='phidinfo'>Distance (mm)</label></th>
+				<th><label class='phidinfo'>Amplitude</label></th>
+			</tr>
+			<tr>
+				<td><label class='phidinfo' id='$KEY_dst0'>0.00</label></td>
+				<td><label class='phidinfo' id='$KEY_amp0'>0.00</label></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo' id='$KEY_dst1'>0.00</label></td>
+				<td><label class='phidinfo' id='$KEY_amp1'>0.00</label></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo' id='$KEY_dst2'>0.00</label></td>
+				<td><label class='phidinfo' id='$KEY_amp2'>0.00</label></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo' id='$KEY_dst3'>0.00</label></td>
+				<td><label class='phidinfo' id='$KEY_amp3'>0.00</label></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo' id='$KEY_dst4'>0.00</label></td>
+				<td><label class='phidinfo' id='$KEY_amp4'>0.00</label></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo' id='$KEY_dst5'>0.00</label></td>
+				<td><label class='phidinfo' id='$KEY_amp5'>0.00</label></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo' id='$KEY_dst6'>0.00</label></td>
+				<td><label class='phidinfo' id='$KEY_amp6'>0.00</label></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo' id='$KEY_dst7'>0.00</label></td>
+				<td><label class='phidinfo' id='$KEY_amp7'>0.00</label></td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset class="errorField" id="$KEY_errorField">
+		<legend><label class='phidinfo'>Errors</label></legend>
+		<div id="$KEY_errScroll" class="errScroll">
+			<table class="errorTable" id="$KEY_errorTable">
+				<col width="80">
+				<col width="80">
+				<col width="160">
+				<thead>
+					<tr>
+						<th align='left'><label>Time</label></th>
+						<th align='center'><label>Error #</label></th>
+						<th align='center'><label>Desc</label></th>
+						<th><input type='submit' size='9' class='phidinfo' onclick='$KEY_errClear()' value='Clear'></th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+			</table>
+		</div>
+	</fieldset>
+</body>
+</html>

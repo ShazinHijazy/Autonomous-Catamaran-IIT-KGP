@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<script>
+		EncoderExample = {}
+
+		var $KEY_phid;
+		var $KEY_errOn = false;
+		var $KEY_elapsedTime;
+
+		EncoderExample.setup = function (phid) {
+
+			$KEY_phid = phid;
+			$KEY_elapsedTime = 0;
+			phid.onPositionChange = $KEY_posChange;
+			phid.onError = $KEY_onError;
+			phid.onPropertyChange = $KEY_propChange;
+
+			switch (phid.getDeviceID()) {
+				case phidget22.DeviceID.PN_1047:
+					$('#$KEY_ioCombo').hide();
+					$('#$KEY_ioText').hide();
+					$('#$KEY_enableBox').prop("checked", phid.getEnabled());
+					break;
+				case phidget22.DeviceID.PN_1052:
+				case phidget22.DeviceID.PN_1057:
+				case phidget22.DeviceID.PN_1065:
+					$('#$KEY_enableBox').hide();
+					$('#$KEY_ioCombo').hide();
+					$('#$KEY_ioText').hide();
+					$('#$KEY_enableLabel').hide();
+					$('#$KEY_index').val("N/A");
+					$('#$KEY_index').prop('disabled', true);
+					break;
+				case phidget22.DeviceID.PN_DCC1001:
+				case phidget22.DeviceID.PN_DCC1002:
+				case phidget22.DeviceID.PN_DCC1010:
+				case phidget22.DeviceID.PN_DCC1020:
+				case phidget22.DeviceID.PN_DCC1030:
+				case phidget22.DeviceID.PN_DCC1110:
+				case phidget22.DeviceID.PN_DCC1120:
+				case phidget22.DeviceID.PN_DCC1130:
+					$('#$KEY_ioCombo').hide();
+					$('#$KEY_ioText').hide();
+					$('#$KEY_enableLabel').hide();
+					$('#$KEY_enableBox').hide();
+					break;
+				case phidget22.DeviceID.PN_ENC1000:
+					$('#$KEY_enableBox').prop("checked", phid.getEnabled());
+					break;
+				case phidget22.DeviceID.PN_ENC1001:
+					$('#$KEY_ioCombo').hide();
+					$('#$KEY_ioText').hide();
+					$('#$KEY_enableBox').prop("checked", phid.getEnabled());
+					break;
+
+				case phidget22.DeviceID.PN_HIN1101:
+					$('#$KEY_index').val("N/A");
+					$('#$KEY_index').prop('disabled', true);
+					$('#$KEY_ioCombo').hide();
+					$('#$KEY_ioText').hide();
+					$('#$KEY_enableBox').prop("checked", phid.getEnabled());
+					break;
+			}
+
+			$('#$KEY_di').val(phid.getDataInterval());
+			$('#$KEY_ct').val(phid.getPositionChangeTrigger());
+		}
+
+		function $KEY_propChange(prop) {
+
+			if (prop === 'DataInterval')
+				$('#$KEY_di').val(this.getDataInterval());
+
+			if (prop === 'PositionChangeTrigger')
+				$('#$KEY_ct').val(this.getPositionChangeTrigger());
+
+			if (prop === 'Enabled')
+				$('#$KEY_enableBox').prop("checked", this.getEnabled());
+
+			if (prop === 'IOMode')
+				$('#$KEY_ioCombo').val(this.getIOMode());
+
+			if (prop === 'Position')
+				$('#$KEY_position').val(this.getPosition());
+		}
+
+		function $KEY_posChange(posChange, timeChange, indexTriggered) {
+
+			$KEY_elapsedTime += (timeChange / 1000);
+			$('#$KEY_relChange').val(posChange);
+			$('#$KEY_timeChange').val(timeChange);
+			$('#$KEY_position').val(this.getPosition());
+			$('#$KEY_time').val($KEY_elapsedTime);
+			$('#$KEY_speed').val((this.getPosition() / $KEY_elapsedTime));
+
+			if (indexTriggered)
+				$('#$KEY_index').val(this.getIndexPosition());
+		}
+
+		function $KEY_resetCount() {
+
+			$KEY_elapsedTime = 0;
+			$('#$KEY_time').val(0);
+			$KEY_phid.setPosition(0);
+			$('#$KEY_position').val(0);
+		}
+
+		function $KEY_enableChange() {
+
+			$KEY_phid.setEnabled($('#$KEY_enableBox')[0].checked);
+		}
+
+		function $KEY_onError(code, msg) {
+
+			var d = new Date();
+			var h = d.getHours();
+			var m = d.getMinutes();
+			var s = d.getSeconds();
+			var ms = d.getMilliseconds();
+			var tr = $('<tr>');
+
+			tr.append('<td class="errTable"> ' + h + ':' + m + ':' + s + '.' + ms);
+			tr.append('<td class="errTableRed"> 0x' + code.toString(16));
+			tr.append('<td class="errTable">' + msg);
+			$('#$KEY_errorTable').append(tr);
+			$("#$KEY_errScroll").scrollTop($("#$KEY_errScroll")[0].scrollHeight);
+			$("#$KEY_errorField").show();
+		}
+
+		function $KEY_errClear() {
+
+			$('#$KEY_errorTable tbody').remove();
+		}
+
+		function $KEY_ioChange() {
+			$KEY_phid.setIOMode($('#$KEY_ioCombo').val());
+			$("#$KEY_ioCombo option[value='2147483647']").remove();
+		}
+
+		function $KEY_setCT() {
+
+			var ct = Number($('#$KEY_ct').val());
+			if (isNaN(ct))
+				return (false);
+
+			$KEY_phid.setPositionChangeTrigger(ct);
+			return (false);
+		}
+
+		function $KEY_setDI() {
+
+			var di = Number($('#$KEY_di').val());
+			if (isNaN(di))
+				return (false);
+
+			if (di < $KEY_phid.getMinDataInterval()) {
+				di = $KEY_phid.getMinDataInterval();
+				$('#$KEY_di').val(di);
+			}
+
+			if (di > $KEY_phid.getMaxDataInterval()) {
+				di = $KEY_phid.getMaxDataInterval();
+				$('#$KEY_di').val(di);
+			}
+
+			$KEY_phid.setDataInterval(di);
+			return (false);
+		}
+
+	</script>
+</head>
+
+<body>
+	<fieldset>
+		<legend><label class='phidinfo'>Settings</label></legend>
+		<table>
+			<tr>
+				<td><label class='phidinfo'>Data Interval</label></td>
+				<td><input type='text' class='phidinfo' id='$KEY_di' size='7' value='30'></td>
+				<td><input type='submit' size='9' id="$KEY_diButton" class='phidinfo' onclick='$KEY_setDI()'
+						value='Set'></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>Change Trigger</label></td>
+				<td><input type='text' class='phidinfo' id='$KEY_ct' size='7' value='0.0'></td>
+				<td><input type='submit' size='9' class='phidinfo' onclick='$KEY_setCT()' value='Set'></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo' id="$KEY_enableLabel">Enabled:</label></td>
+				<td><input type="checkbox" id='$KEY_enableBox' onChange="$KEY_enableChange()" value="0"></td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset>
+		<legend><label class='phidinfo'>Data</label></legend>
+		<table>
+			<tr>
+				<td><label class='phidinfo'>Relative Change:</label></td>
+				<td><label class='phidinfo'>Time since last change:</label></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td><input type='text' class='phidinfo' id='$KEY_relChange' size='7' value=''> counts</td>
+				<td><input type='text' class='phidinfo' id='$KEY_timeChange' size='7' value=''> ms</td>
+				<td><input type='submit' style="width:100px" id='$KEY_resetButton' class='phidinfo'
+						onclick='$KEY_resetCount()' value='Reset Count'></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>Encoder Position:</label></td>
+				<td><label class='phidinfo'>Index Position:</label></td>
+			</tr>
+			<tr>
+				<td><input type='text' class='phidinfo' id='$KEY_position' size='7' value='0'> counts</td>
+				<td><input type='text' class='phidinfo' id='$KEY_index' size='7' value=''> counts</td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>Total Time:</label></td>
+				<td><label class='phidinfo'>Avg. Speed:</label></td>
+			</tr>
+			<tr>
+				<td><input type='text' class='phidinfo' id='$KEY_time' size='7' value='0'> s</td>
+				<td><input type='text' class='phidinfo' id='$KEY_speed' size='7' value=''> counts/s</td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo' id='$KEY_ioText'>Encoder I/O Mode:</label></td>
+				<td style="text-align:center">
+					<select class='phidinfo' onChange='$KEY_ioChange()' id='$KEY_ioCombo'>
+						<option value="2147483647">---</option>
+						<option value="1">Push-Pull</option>
+						<option value="2">Line Driver (2.2K&Omega;)</option>
+						<option value="3">Line Driver (10K&Omega;)</option>
+						<option value="4">Open Collector (2.2K&Omega;)</option>
+						<option value="5">Open Collector (10K&Omega;)</option>
+					</select>
+				</td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset class="errorField" id="$KEY_errorField">
+		<legend><label class='phidinfo'>Errors</label></legend>
+		<div id="$KEY_errScroll" class="errScroll">
+			<table class="errorTable" id="$KEY_errorTable">
+				<col width="80">
+				<col width="80">
+				<col width="160">
+				<thead>
+					<tr>
+						<th align='left'><label>Time</label></th>
+						<th align='center'><label>Error #</label></th>
+						<th align='center'><label>Desc</label></th>
+						<th><input type='submit' size='9' class='phidinfo' onclick='$KEY_errClear()' value='Clear'></th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+			</table>
+		</div>
+	</fieldset>
+</body>
+
+</html>

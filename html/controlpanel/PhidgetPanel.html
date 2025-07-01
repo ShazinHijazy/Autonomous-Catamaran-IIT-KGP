@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<script>
+
+	PhidgetPanel = {
+		detached: true
+	};
+
+	var _phid;
+
+	PhidgetPanel.setup = function(phid, key) {
+
+		_phid = phid;
+
+		this.setLabel(key, 'attachedValue', (phid.getIsHubPortDevice() ? phid.getHub().getDeviceSKU() : phid.getDeviceSKU()) + ' - ' + phid.getDeviceName());
+		this.setLabel(key, 'versionValue', phid.getDeviceVersion());
+		this.setLabel(key, 'channelValue', phid.getChannel());
+		this.setLabel(key, 'serialNumberValue', phid.getDeviceSerialNumber());
+		this.setLabel(key, 'labelValue', phid.getDeviceLabel());
+		this.setLabel(key, 'remoteValue', phid.isRemote ? '(Network)' : '(WebUSB)');
+
+		if(phid.getDeviceClass() === phidget22.DeviceClass.VINT) {
+			this.setLabel(key, 'serialNumberLabel', 'Hub Serial Number: ');
+			this.setLabel(key, 'labelLabel', 'Hub Label: ');
+			this.setLabel(key, 'hubPortValue', phid.getHubPort());
+		} else {
+			this.setLabel(key, 'serialNumberLabel', 'Serial Number: ');
+			this.setLabel(key, 'labelLabel', 'Label: ');
+			this.hideLabel(key, 'hubPortLabel');
+		}
+	}
+
+	PhidgetPanel.setLabel = function(key, name, value) {
+
+		var id = '#' + key + '_' + name;
+		var div = $(id);
+		div.text(value);
+	}
+
+	PhidgetPanel.hideLabel = function(key, name) {
+
+		var id = '#' + key + '_' + name;
+		var div = $(id);
+		div.hide();
+	}
+
+	PhidgetPanel.toggle = function(phid, key) {
+
+		if(this.detached) {
+			var id = '#' + key + '_phidgetpanel_detached';
+			var div = $(id);
+			div.hide();
+
+			var id = '#' + key + '_phidgetpanel_content';
+			var div = $(id);
+			div.show();
+		} else {
+			var id = '#' + key + '_phidgetpanel_content';
+			var div = $(id);
+			div.hide();
+
+			var id = '#' + key + '_phidgetpanel_detached';
+			var div = $(id);
+			div.show();
+		}
+		this.detached = !this.detached;
+	}
+
+</script>
+<body>
+	<div id="$KEY_phidgetpanel_top">
+		<fieldset>
+			<legend><label class="phidinfo">Phidget Info</label></legend>
+			<table width="100%" class="phidinfo">
+				<tr>
+					<td>
+						<label class="phidinfo">Attached: </label>
+						<label class="phidinfo" id="$KEY_attachedValue"></label>
+					</td>
+				</tr>
+			</table>
+			<hr>
+			<table>
+				<tr>
+					<td>
+						<label class="phidinfo">Version: </label>
+						<label class="phidinfo" id="$KEY_versionValue"></label>
+					</td>
+					<td colspan="2">
+						<label class="phidinfo" id="$KEY_serialNumberLabel"></label>
+						<label class="phidinfo" id="$KEY_serialNumberValue"></label>
+					</td>
+					<td>
+						<label class="phidinfo" id="$KEY_remoteValue"></label>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<label class="phidinfo" id="$KEY_channelLabel">Channel: </label>
+						<label class="phidinfo" id="$KEY_channelValue"></label>
+					</td>
+					<td>
+						<label class="phidinfo" id="$KEY_hubPortLabel">Hub Port: </label>
+						<label class="phidinfo" id="$KEY_hubPortValue"></label>
+					</td>
+					<td>
+						<label class="phidinfo" id="$KEY_labelLabel"></label>
+						<label class="phidinfo" id="$KEY_labelValue"></label>
+					</td>
+				</tr>
+			</table>
+		</fieldset>
+	</div>
+	<div id="$KEY_phidgetpanel_detached">
+		<fieldset>
+			<legend><label class="phidinfo">Not Attached</label></legend>
+			<h3 style="text-align:center;">Device is not attached</h3>
+		</fieldset>
+	</div>
+	<div id="$KEY_phidgetpanel_content" style="display:none">
+	</div>
+</body>
+</html>

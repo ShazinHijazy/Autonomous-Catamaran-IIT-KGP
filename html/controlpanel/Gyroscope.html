@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<script>
+	GyroscopeExample = {}
+
+	var $KEY_phid;
+	var $KEY_errOn = false;
+
+	GyroscopeExample.setup = function(phid) {
+
+		$KEY_phid = phid;
+		phid.onAngularRateUpdate = $KEY_gyrChange;
+		phid.onError = $KEY_onError;
+		phid.onPropertyChange = $KEY_propChange;
+
+
+		var gyrMin = phid.getMinAngularRate()[0];
+		var gyrMax = phid.getMaxAngularRate()[0];
+		
+		$('#$KEY_heatingField').hide();
+		switch (phid.getDeviceID()) {
+			case phidget22.DeviceID.PN_MOT0109:
+			case phidget22.DeviceID.PN_MOT0110:
+				$('#$KEY_heatingField').show();
+				$('#$KEY_heating').prop("checked", phid.getHeatingEnabled());
+				break;
+			default:
+				$('#$KEY_heatingField').hide();
+				break;
+		}
+
+		$('.gyrdial').knob({
+			min: gyrMin,
+			max: gyrMax,
+			step: 0.001,
+			readOnly: true,
+			width: 120,
+			height: 120,
+			fgColor: '#000000',
+			fontWeight: '12px',
+			thickness: 0.1,
+			skin: 'tron'
+		});
+
+		$('#$KEY_di').val(phid.getDataInterval());
+	}
+
+	function $KEY_propChange(prop) {
+
+		if(prop === 'DataInterval')
+			$('#$KEY_di').val(this.getDataInterval());
+		if (prop === 'HeatingEnabled')
+			$('#$KEY_heating').prop("checked", this.getHeatingEnabled());
+	}
+
+	function $KEY_gyrChange(gyr, ts) {
+
+		$('#$KEY_T').text(ts);
+		$('#$KEY_X').val(gyr[0]).trigger('change');
+		$('#$KEY_Y').val(gyr[1]).trigger('change');
+		$('#$KEY_Z').val(gyr[2]).trigger('change');
+	}
+
+	function $KEY_setDI() {
+
+		var di = Number($('#$KEY_di').val());
+		if(isNaN(di))
+			return (false);
+
+		if(di < $KEY_phid.getMinDataInterval()) {
+			di = $KEY_phid.getMinDataInterval();
+			$('#$KEY_di').val(di);
+		}
+
+		if(di > $KEY_phid.getMaxDataInterval()) {
+			di = $KEY_phid.getMaxDataInterval();
+			$('#$KEY_di').val(di);
+		}
+
+		$KEY_phid.setDataInterval(di);
+		return (false);
+	}
+
+	function $KEY_zeroGyro() {
+
+		$KEY_phid.zero();
+	}
+	
+	function $KEY_setHeating() {
+		$KEY_phid.setHeatingEnabled($('#$KEY_heating').is(':checked'));
+	}
+
+	function $KEY_onError(code, msg) {
+
+		var d = new Date();
+		var h = d.getHours();
+		var m = d.getMinutes();
+		var s = d.getSeconds();
+		var ms = d.getMilliseconds();
+		var tr = $('<tr>');
+
+		tr.append('<td class="errTable"> ' + h + ':' + m + ':' + s + '.' + ms);
+		tr.append('<td class="errTableRed"> 0x' + code.toString(16));
+		tr.append('<td class="errTable">' + msg);
+		$('#$KEY_errorTable').append(tr);
+		$("#$KEY_errScroll").scrollTop($("#$KEY_errScroll")[0].scrollHeight);
+		$("#$KEY_errorField").show();
+	}
+
+	function $KEY_errClear() {
+
+		$('#$KEY_errorTable tbody').remove();
+	}
+
+</script>
+<body>
+	<fieldset>
+		<legend><label class='phidinfo'>Settings</label></legend>
+		<table>
+			<tr>
+				<td><label class='phidinfo'>Data Interval</label></td>
+				<td><input type='text' class='phidinfo' id='$KEY_di' size='7' value='30'></td>
+				<td><input type='submit' size='9' class='phidinfo' onclick='$KEY_setDI()' value='Set'></td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset>
+		<legend><label class='phidinfo'>Gyroscope Data (&deg/s)</label></legend>
+		<table>
+			<tr>
+				<td colspan='3'>
+					<label class='phidinfo'>TimeStamp:</label><label class='phidinfo' id='$KEY_T'></label>
+				</td>
+			</tr>
+			<tr>
+				<td align='center'><label>X</label></td>
+				<td align='center'><label>Y</label></td>
+				<td align='center'><label>Z</label></td>
+			</tr>
+			<tr>
+				<td><input id='$KEY_X' class="gyrdial" value="0"></td>
+				<td><input id='$KEY_Y' class="gyrdial" value="0"></td>
+				<td><input id='$KEY_Z' class="gyrdial" value="0"></td>
+			</tr>
+			<tr>
+				<td><input type='submit' style="width:150px" class='phidinfo' onclick='$KEY_zeroGyro()' value='Zero Gyroscope'></td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset id="$KEY_heatingField">
+		<legend><label class='phidinfo'>Temperature Compensation</label></legend>
+		<table>
+			<tr>
+				<td><label class='phidinfo'>Self-Heating Enabled</label></td>
+				<td><input id='$KEY_heating' type='checkbox' size='9' class='phidinfo' onclick='$KEY_setHeating()'></input></td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset class="errorField" id="$KEY_errorField">
+		<legend><label class='phidinfo'>Errors</label></legend>
+		<div id="$KEY_errScroll" class="errScroll">
+			<table class="errorTable" id="$KEY_errorTable">
+				<col width="80">
+				<col width="80">
+				<col width="160">
+				<thead>
+					<tr>
+						<th align='left'><label>Time</label></th>
+						<th align='center'><label>Error #</label></th>
+						<th align='center'><label>Desc</label></th>
+						<th><input type='submit' size='9' class='phidinfo' onclick='$KEY_errClear()' value='Clear'></th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+			</table>
+		</div>
+	</fieldset>
+</body>
+</html>

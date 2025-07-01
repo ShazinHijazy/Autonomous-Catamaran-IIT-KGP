@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<script>
+	DictionaryExample = {
+		width: 500
+	}
+
+	var $KEY_phid;
+
+	DictionaryExample.setup = function(phid) {
+
+		$KEY_phid = phid;
+
+		$KEY_phid.onAdd = function(key, val) {
+			$('#$KEY_keyvalues').append('<option id="$KEY_kvs_' + key + '" value="' + key + '">' + key +
+			  ' = ' + val + '</option>');
+		}
+
+		$KEY_phid.onUpdate = function(key, val) {
+			$('#$KEY_keyvalues option[value="' + key + '"]').text(key + ' = ' + val);
+		}
+
+		$KEY_phid.onRemove = function(key) {
+			$('#$KEY_keyvalues option[value="' + key + '"]').remove();
+		}
+
+		var allkeys = [];
+
+		function $KEY_getKeys(startKey) {
+
+			return (new Promise(function(resolve, reject) {
+
+				$KEY_phid.scan(startKey).then(function(keys) {
+					resolve(keys);
+				}).catch(function(err) {
+					reject(err);
+				});
+			})).then(function(keys) {
+				if(keys.length == 0)
+					return (allkeys);
+				allkeys = allkeys.concat(keys);
+				return ($KEY_getKeys(keys[keys.length - 1]));
+			});
+		}
+
+		$KEY_getKeys('').then(function(keys) {
+
+			for(var i in keys) {
+				$KEY_phid.get(keys[i]).then(function(val) {
+					$('#$KEY_keyvalues').append('<option id="$KEY_kvs_' + this + '" value="' + this + '">' + this +
+					  ' = ' + val + '</option>');
+				}.bind(keys[i]));
+			}
+		});
+	}
+
+	var $KEY_addKV = function() {
+
+		var key = $('#$KEY_key').val();
+		var val = $('#$KEY_value').val();
+
+		$KEY_phid.add(key, val).then(function() {
+			$('#$KEY_keyvalues').append('<option id="$KEY_kvs_' + key + '" value="' + key + '">' + key +
+			  ' = ' + val + '</option>');
+		}).catch(function(err) {
+			console.error('failed to add key: ' + key, err);
+		});
+	}
+
+	var $KEY_updateKV = function() {
+
+		var key = $('#$KEY_key').val().trim();
+		var val = $('#$KEY_value').val().trim();
+		if(key.length == 0 || val.length == 0)
+			return;
+
+		$KEY_phid.update(key, val).then(function() {
+			$('#$KEY_keyvalues option[value="' + key + '"]').text(key + ' = ' + val);
+		}).catch(function(err) {
+			console.error('failed to update key: ' + key, err);
+		});
+	}
+
+	var $KEY_deleteKV = function() {
+
+		var key = $('#$KEY_keyvalues option:selected').val()
+		$KEY_phid.remove(key).then(function() {
+			$('#$KEY_keyvalues option[value="' + key + '"]').remove();
+		}).catch(function(err) {
+			console.error('failed to delete key: ' + key, err);
+		});
+	}
+
+	var $KEY_keyvaluesselect = function() {
+
+		var val = $('#$KEY_keyvalues option:selected').text()
+		var eq = val.indexOf('=');
+		if(eq === -1)
+			return;
+		var key = val.substring(0, eq).trim();
+		val = val.substring(eq + 1).trim();
+		$('#$KEY_key').val(key);
+		$('#$KEY_value').val(val);
+	}
+
+</script>
+<style>
+	select.kvs {
+		overflow-y: auto;
+	}
+</style>
+<html>
+<body>
+	<fieldset>
+		<legend>Key Value Pairs</legend>
+		<select class="kvs" name="$KEY_keyvalues" id="$KEY_keyvalues" size="10" multiple
+				onchange="$KEY_keyvaluesselect()"></select>
+	</fieldset>
+	<hr>
+	<fieldset>
+		<table id="$KEY_controls" border="0">
+			<tr>
+				<td><input type="text" id="$KEY_key" size="10"></td>
+				<td>=</td>
+				<td><input type="text" id="$KEY_value" size="20"></td>
+			<tr>
+				<td colspan="3">
+					<input type="button" value="Add" onclick="$KEY_addKV()">
+					<input type="button" value="Update" onclick="$KEY_updateKV()">
+					<input type="button" value="Delete" onclick="$KEY_deleteKV()">
+				</td>
+			</tr>
+		</table>
+	</fieldset>
+</body>
+</html>

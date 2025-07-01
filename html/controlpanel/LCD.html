@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html>
+<script>
+	LCDExample = {}
+
+	var $KEY_phid;
+	var $KEY_errOn = false;
+
+	LCDExample.setup = function(phid) {
+
+		$KEY_phid = phid;
+		$('#$KEY_screenSize').text("Screen Size: " + phid.getWidth() + "x" + phid.getHeight());
+
+		phid.onError = $KEY_onError;
+		phid.onPropertyChange = $KEY_propChange;
+
+		switch(phid.getDeviceID()) {
+			case phidget22.DeviceID.PN_LCD1100:
+				$('#$KEY_textField').hide();
+				$KEY_loadCustomFont();
+				phid.setFrameBuffer(0);
+				break;
+			case phidget22.DeviceID.PN_1202_1203:
+				$('#$KEY_sizeCombo').val('7');
+				$('#$KEY_sizeCombo').attr("disabled", true);
+				$('#$KEY_initButton').hide();
+				$('#$KEY_graphicField').hide();
+				$('#$KEY_tBacklight').removeAttr("disabled");
+				$('#$KEY_tContrast').removeAttr("disabled");
+				$('#$KEY_cursor').removeAttr("disabled");
+				$('#$KEY_blink').removeAttr("disabled");
+				$('#$KEY_clearButton').removeAttr("disabled");
+				$('#$KEY_writeButton').removeAttr("disabled");
+				$('#$KEY_customButton').removeAttr("disabled");
+				$('#$KEY_cursor').prop("checked", phid.getCursorOn());
+				$('#$KEY_blink').prop("checked", phid.getCursorBlink());
+				break;
+			case phidget22.DeviceID.PN_1204:
+				$('#$KEY_graphicField').hide();
+
+				if(phid.getScreenSize() < 2000) {
+					$('#$KEY_tBacklight').removeAttr("disabled");
+					$('#$KEY_tContrast').removeAttr("disabled");
+					$('#$KEY_cursor').removeAttr("disabled");
+					$('#$KEY_blink').removeAttr("disabled");
+					$('#$KEY_clearButton').removeAttr("disabled");
+					$('#$KEY_writeButton').removeAttr("disabled");
+					$('#$KEY_customButton').removeAttr("disabled");
+				}
+				$('#$KEY_cursor').prop("checked", phid.getCursorOn());
+				$('#$KEY_blink').prop("checked", phid.getCursorBlink());
+				break;
+			case phidget22.DeviceID.PN_1215__1218:
+			case phidget22.DeviceID.PN_1219__1222:
+				$('#$KEY_initButton').attr("disabled", true);
+				$('#$KEY_sizeCombo').attr("disabled", true);
+				$('#$KEY_graphicField').hide();
+				$('#$KEY_tBacklight').removeAttr("disabled");
+				$('#$KEY_tContrast').removeAttr("disabled");
+				$('#$KEY_cursor').removeAttr("disabled");
+				$('#$KEY_blink').removeAttr("disabled");
+				$('#$KEY_clearButton').removeAttr("disabled");
+				$('#$KEY_writeButton').removeAttr("disabled");
+				$('#$KEY_customButton').removeAttr("disabled");
+				$('#$KEY_cursor').prop("checked", phid.getCursorOn());
+				$('#$KEY_blink').prop("checked", phid.getCursorBlink());
+				break;
+		}
+
+		$('#$KEY_gContrast').val(phid.getContrast());
+		$('#$KEY_tContrast').val(phid.getContrast());
+		$('#$KEY_tBacklight').val(phid.getBacklight());
+		$('#$KEY_gBacklight').val(phid.getBacklight());
+		$('#$KEY_sizeCombo').val(phid.getScreenSize());
+
+	}
+
+	function $KEY_propChange(prop) {
+
+		if(prop === 'Backlight') {
+			$('#$KEY_tBacklight').val(this.getBacklight());
+			$('#$KEY_gBacklight').val(this.getBacklight());
+		}
+
+		if(prop === 'Contrast') {
+			$('#$KEY_gContrast').val(this.getContrast());
+			$('#$KEY_tContrast').val(this.getContrast());
+		}
+
+		if(prop === 'CursorBlink')
+			$('#$KEY_blink').prop("checked", this.getCursorBlink());
+
+		if(prop === 'CursorOn')
+			$('#$KEY_cursor').prop("checked", this.getCursorOn());
+
+		if(prop === 'Sleeping')
+			$('#$KEY_sleepButton').val(this.getSleeping());
+
+		if(prop === 'FontSize') {
+			/*switch (this.getFontSize()) {
+				case 1:
+					$('#$KEY_fontCombo').val("Custom1");
+					break;
+				case 2:
+					//$('#$KEY_fontCombo').val("Custom2");
+					break;
+				case 3:
+					//$('#$KEY_fontCombo').val("6x10");
+					break;
+				case 4:
+					$('#$KEY_fontCombo').val("5x8");
+					break;
+				case 5:
+					$('#$KEY_fontCombo').val("6x12");
+					break;
+			}*/
+		}
+
+		if(prop === 'FrameBuffer') {
+			switch(this.getFrameBuffer()) {
+				case 0:
+					$('#$KEY_frameCombo').val("0");
+					break;
+				case 1:
+					$('#$KEY_frameCombo').val("1");
+					break;
+				case 2:
+					$('#$KEY_frameCombo').val("2");
+					break;
+
+			}
+		}
+
+		if(prop === 'ScreenSize')
+			$('#$KEY_sizeCombo').val(this.getScreenSize());
+	}
+
+	function $KEY_onError(code, msg) {
+
+		var d = new Date();
+		var h = d.getHours();
+		var m = d.getMinutes();
+		var s = d.getSeconds();
+		var ms = d.getMilliseconds();
+		var tr = $('<tr>');
+
+		tr.append('<td class="errTable"> ' + h + ':' + m + ':' + s + '.' + ms);
+		tr.append('<td class="errTableRed"> 0x' + code.toString(16));
+		tr.append('<td class="errTable">' + msg);
+		$('#$KEY_errorTable').append(tr);
+		$("#$KEY_errScroll").scrollTop($("#$KEY_errScroll")[0].scrollHeight);
+		$("#$KEY_errorField").show();
+	}
+
+	function $KEY_errClear() {
+
+		$('#$KEY_errorTable tbody').remove();
+	}
+
+	function $KEY_loadCustomChar() {
+		var temp = [0, 0, 0, 0, 0,
+					0, 1, 0, 1, 0,
+					0, 1, 0, 1, 0,
+					0, 1, 0, 1, 0,
+					0, 1, 0, 1, 0,
+					0, 0, 0, 0, 0,
+					1, 0, 0, 0, 1,
+					0, 1, 1, 1, 0,
+		];
+
+		$KEY_phid.setCharacterBitmap(phidget22.LCDFont.DIMENSIONS_5X8, String.fromCharCode(0x8), temp).catch(function(err) {
+			console.error(err);
+		});
+	}
+
+	function $KEY_loadCustomFont() {
+
+		$KEY_phid.setFontSize(phidget22.LCDFont.USER1, 6, 10).then(function(res) {
+			var temp = [0, 1, 1, 1, 1, 0,
+						1, 0, 0, 0, 0, 1,
+						1, 0, 1, 1, 0, 1,
+						1, 0, 1, 1, 0, 1,
+						1, 0, 1, 1, 0, 1,
+						1, 0, 0, 0, 0, 1,
+						1, 0, 1, 1, 0, 1,
+						1, 0, 1, 1, 0, 1,
+						1, 0, 1, 1, 0, 1,
+						0, 1, 0, 0, 1, 0,
+			];
+			$KEY_phid.setCharacterBitmap(phidget22.LCDFont.USER1, 'a', temp);
+
+			var temp = [1, 1, 1, 1, 1, 0,
+						1, 0, 0, 0, 1, 1,
+						1, 0, 1, 1, 0, 1,
+						1, 0, 1, 1, 0, 1,
+						1, 0, 0, 0, 1, 0,
+						1, 0, 1, 1, 0, 1,
+						1, 0, 1, 1, 0, 1,
+						1, 0, 1, 1, 0, 1,
+						1, 0, 0, 0, 1, 1,
+						1, 1, 1, 1, 1, 0,
+			];
+			$KEY_phid.setCharacterBitmap(phidget22.LCDFont.USER1, 'b', temp);
+			var temp = [1, 1, 1, 1, 1, 1,
+						1, 0, 0, 0, 0, 1,
+						1, 0, 1, 1, 1, 1,
+						1, 0, 1, 0, 0, 0,
+						1, 0, 1, 0, 0, 0,
+						1, 0, 1, 0, 0, 0,
+						1, 0, 1, 0, 0, 0,
+						1, 0, 1, 1, 1, 1,
+						1, 0, 0, 0, 0, 1,
+						1, 1, 1, 1, 1, 1,
+			];
+			$KEY_phid.setCharacterBitmap(phidget22.LCDFont.USER1, 'c', temp);
+			var temp = [1, 1, 1, 1, 0, 0,
+						1, 0, 0, 0, 1, 0,
+						1, 0, 1, 0, 0, 1,
+						1, 0, 1, 1, 0, 1,
+						1, 0, 1, 1, 0, 1,
+						1, 0, 1, 1, 0, 1,
+						1, 0, 1, 1, 0, 1,
+						1, 0, 1, 0, 0, 1,
+						1, 0, 0, 0, 1, 0,
+						1, 1, 1, 1, 0, 0,
+			];
+			$KEY_phid.setCharacterBitmap(phidget22.LCDFont.USER1, 'd', temp);
+			var temp = [0, 1, 1, 1, 1, 0,
+						1, 0, 0, 0, 0, 1,
+						1, 0, 1, 1, 1, 0,
+						1, 0, 1, 1, 0, 0,
+						1, 0, 0, 0, 1, 0,
+						1, 0, 0, 0, 1, 0,
+						1, 0, 1, 1, 0, 0,
+						1, 0, 1, 1, 1, 0,
+						1, 0, 0, 0, 0, 1,
+						0, 1, 1, 1, 1, 0,
+			];
+			$KEY_phid.setCharacterBitmap(phidget22.LCDFont.USER1, 'e', temp);
+			var temp = [0, 1, 1, 1, 1, 0,
+						1, 0, 0, 0, 0, 1,
+						1, 0, 1, 1, 1, 0,
+						1, 0, 1, 0, 0, 0,
+						1, 0, 1, 1, 0, 0,
+						1, 0, 0, 0, 1, 0,
+						1, 0, 1, 1, 0, 0,
+						1, 0, 1, 0, 0, 0,
+						1, 0, 1, 0, 0, 0,
+						0, 1, 0, 0, 0, 0,
+			];
+			$KEY_phid.setCharacterBitmap(phidget22.LCDFont.USER1, 'f', temp);
+			var temp = [0, 1, 0, 1, 0, 0,
+						1, 0, 1, 0, 1, 0,
+						1, 0, 1, 0, 1, 0,
+						1, 0, 1, 0, 1, 0,
+						1, 0, 0, 0, 1, 0,
+						1, 0, 0, 0, 1, 0,
+						1, 0, 1, 0, 1, 0,
+						1, 0, 1, 0, 1, 0,
+						1, 0, 1, 0, 1, 0,
+						0, 1, 0, 1, 0, 0,
+			];
+			$KEY_phid.setCharacterBitmap(phidget22.LCDFont.USER1, 'h', temp);
+			var temp = [0, 1, 0, 0, 0, 0,
+						1, 0, 1, 0, 0, 0,
+						1, 0, 1, 0, 0, 0,
+						1, 0, 1, 0, 0, 0,
+						1, 0, 1, 0, 0, 0,
+						1, 0, 1, 0, 0, 0,
+						1, 0, 1, 0, 0, 0,
+						1, 0, 1, 1, 0, 0,
+						1, 0, 0, 0, 1, 0,
+						0, 1, 1, 1, 0, 0,
+			];
+			$KEY_phid.setCharacterBitmap(phidget22.LCDFont.USER1, 'l', temp);
+			var temp = [0, 1, 1, 1, 0, 0,
+						1, 0, 0, 0, 1, 0,
+						1, 0, 1, 0, 1, 0,
+						1, 0, 1, 0, 1, 0,
+						1, 0, 1, 0, 1, 0,
+						1, 0, 1, 0, 1, 0,
+						1, 0, 1, 0, 1, 0,
+						1, 0, 1, 0, 1, 0,
+						1, 0, 0, 0, 1, 0,
+						0, 1, 1, 1, 0, 0,
+			];
+			$KEY_phid.setCharacterBitmap(phidget22.LCDFont.USER1, 'o', temp);
+			var temp = [0, 1, 1, 1, 0, 0,
+						1, 0, 0, 0, 1, 0,
+						1, 0, 1, 0, 1, 0,
+						1, 0, 1, 0, 1, 0,
+						1, 0, 0, 0, 1, 0,
+						1, 0, 0, 1, 0, 0,
+						1, 0, 0, 0, 1, 0,
+						1, 0, 1, 0, 1, 0,
+						1, 0, 1, 0, 1, 0,
+						0, 1, 1, 1, 0, 0,
+			];
+			$KEY_phid.setCharacterBitmap(phidget22.LCDFont.USER1, 'r', temp);
+			var temp = [0, 1, 0, 0, 0, 1,
+						1, 0, 1, 0, 1, 0,
+						1, 0, 1, 0, 1, 0,
+						1, 0, 1, 0, 1, 0,
+						1, 0, 1, 0, 1, 0,
+						1, 0, 1, 1, 1, 0,
+						1, 0, 1, 0, 1, 0,
+						1, 0, 1, 0, 1, 0,
+						1, 0, 0, 0, 0, 0,
+						0, 1, 1, 1, 1, 1,
+			];
+			$KEY_phid.setCharacterBitmap(phidget22.LCDFont.USER1, 'w', temp);
+		});
+	}
+
+	function $KEY_lightChange() {
+		if($KEY_phid.getDeviceID() == phidget22.DeviceID.PN_LCD1100)
+			$KEY_phid.setBacklight($('#$KEY_gBacklight').val());
+		else
+			$KEY_phid.setBacklight($('#$KEY_tBacklight').val());
+	}
+
+	function $KEY_contChange() {
+		if($KEY_phid.getDeviceID() == phidget22.DeviceID.PN_LCD1100)
+			$KEY_phid.setContrast($('#$KEY_gContrast').val());
+		else
+			$KEY_phid.setContrast($('#$KEY_tContrast').val());
+	}
+	function $KEY_frameChange() {
+		$KEY_phid.setFrameBuffer($('#$KEY_frameCombo').val());
+		$KEY_phid.flush();
+	}
+
+	function $KEY_clear() {
+		$KEY_phid.clear();
+		$KEY_phid.flush();
+	}
+
+	function $KEY_testRange(x, y) {
+		if((x > ($KEY_phid.getWidth()) - 1) || (y > ($KEY_phid.getHeight()) - 1) || (x < 0) || (y < 0)) {
+			window.alert("Pixel (" + x + "," + y + ") out of range.");
+			return 1;
+		}
+		else
+			return 0;
+	}
+
+	function $KEY_drawPixel() {
+		var x = $('#$KEY_drawPixX').val();
+		var y = $('#$KEY_drawPixY').val();
+		if($KEY_testRange(x, y) == 0) {
+			$KEY_phid.drawPixel(x, y, !$('#$KEY_drawPixInv')[0].checked);
+			$KEY_phid.flush();
+		}
+	}
+
+	function $KEY_drawLine() {
+		var x1 = $('#$KEY_drawLinX1').val();
+		var y1 = $('#$KEY_drawLinY1').val();
+		var x2 = $('#$KEY_drawLinX2').val();
+		var y2 = $('#$KEY_drawLinY2').val();
+		if($KEY_testRange(x1, y1) == 0 && $KEY_testRange(x2, y2) == 0) {
+			$KEY_phid.drawLine(x1, y1, x2, y2);
+			$KEY_phid.flush();
+		}
+	}
+
+	function $KEY_writegText() {
+		var x = $('#$KEY_textX').val();
+		var y = $('#$KEY_textY').val();
+		var chars = $('#$KEY_gText').val();
+		var font = $('#$KEY_fontCombo').val();
+		if($KEY_testRange(x, y) == 0) {
+			$KEY_phid.writeText(font, x, y, chars);
+			$KEY_phid.flush();
+		}
+	}
+
+	function $KEY_writeText() {
+		var x = $('#$KEY_tTextX').val();
+		var y = $('#$KEY_tTextY').val();
+		var chars = $('#$KEY_tText').val();
+		$KEY_phid.writeText(phidget22.LCDFont.DIMENSIONS_5X8, x, y, chars);
+		$KEY_phid.flush();
+	}
+
+	function $KEY_writeCustom() {
+		$KEY_loadCustomChar();
+		$KEY_phid.clear();
+		var x = $('#$KEY_tTextX').val();
+		var y = $('#$KEY_tTextY').val();
+		$KEY_phid.writeText(phidget22.LCDFont.DIMENSIONS_5X8, x, y, String.fromCharCode(8));
+		$KEY_phid.flush();
+	}
+
+	function $KEY_drawRect() {
+		var x1 = $('#$KEY_drawRectX1').val();
+		var y1 = $('#$KEY_drawRectY1').val();
+		var x2 = $('#$KEY_drawRectX2').val();
+		var y2 = $('#$KEY_drawRectY2').val();
+		if($KEY_testRange(x1, y1) == 0 && $KEY_testRange(x2, y2) == 0) {
+			$KEY_phid.drawRect(x1, y1, x2, y2, $('#$KEY_drawRectFill')[0].checked, $('#$KEY_drawRectInv')[0].checked);
+			$KEY_phid.flush();
+		}
+	}
+
+	function $KEY_saveFrame() {
+		$('#$KEY_saveButton')[0].disabled = true;
+		$KEY_phid.saveFrameBuffer($('#$KEY_frameCombo').val());
+	}
+
+	function $KEY_sleep() {
+		if($KEY_phid.getSleeping()) {
+			$('#$KEY_sleepButton').val("Sleep");
+			$KEY_phid.setSleeping(false);
+		}
+		else {
+			$('#$KEY_sleepButton').val("Wake Up");
+			$KEY_phid.setSleeping(true);
+		}
+	}
+
+	function $KEY_copy() {
+		var x1 = $('#$KEY_cpyX1').val();
+		var y1 = $('#$KEY_cpyY1').val();
+		var x2 = $('#$KEY_cpyX2').val();
+		var y2 = $('#$KEY_cpyY2').val();
+		var x = $('#$KEY_cpyX').val();
+		var y = $('#$KEY_cpyY').val();
+		var src = $('#$KEY_src').val();
+		var dst = $('#$KEY_dst').val();
+		if($KEY_testRange(x1, y1) == 0 && $KEY_testRange(x2, y2) == 0 && $KEY_testRange(x, y) == 0) {
+			$KEY_phid.copy(src, dst, x1, y1, x2, y2, x, y, $('#$KEY_cpyInv')[0].checked);
+			$KEY_phid.flush();
+		}
+	}
+
+	function $KEY_init() {
+		$KEY_phid.setScreenSize($('#$KEY_sizeCombo').val());
+		$KEY_phid.initialize();
+		$('#$KEY_tBacklight').removeAttr("disabled");
+		$('#$KEY_tContrast').removeAttr("disabled");
+		$('#$KEY_cursor').removeAttr("disabled");
+		$('#$KEY_blink').removeAttr("disabled");
+		$('#$KEY_clearButton').removeAttr("disabled");
+		$('#$KEY_writeButton').removeAttr("disabled");
+		$('#$KEY_customButton').removeAttr("disabled");
+	}
+
+	function $KEY_cursor() {
+		$KEY_phid.setCursorOn($('#$KEY_cursor')[0].checked);
+		$KEY_phid.setCursorBlink($('#$KEY_blink')[0].checked);
+	}
+
+	async function $KEY_writeBitmap() {
+
+
+		var bitmap = [0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0,
+					   0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+					   0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+					   0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0,
+					   0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0,
+					   1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1,
+					   1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1,
+					   0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0,
+					   0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0,
+					   0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0,
+					   0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0,
+					   0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0,
+					   0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0];
+
+		await $KEY_phid.writeBitmap(0, 0, 14, 13, bitmap);
+		$KEY_phid.flush();
+	}
+
+</script>
+<body>
+	<fieldset id="$KEY_textField">
+		<legend><label class='phidinfo'>TextLCD</label></legend>
+		<table>
+			<tr>
+				<td colspan="2">
+					<label class='phidinfo'>Screen Size:</label>
+					<select class='phidinfo' id='$KEY_sizeCombo'>
+						<option value="2">1x8</option>
+						<option value="3">2x8</option>
+						<option value="4">1x16</option>
+						<option value="5">2x16</option>
+						<option value="6">4x16</option>
+						<option value="7">2x20</option>
+						<option value="8">4x20</option>
+						<option value="9">2x24</option>
+						<option value="10">1x40</option>
+						<option value="11">2x40</option>
+						<option value="12">4x40</option>
+					</select>
+				</td>
+				<td colspan="2"><input type='submit' style="width:85px" id='$KEY_initButton' class='phidinfo' onclick='$KEY_init()' value='Initialize'></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>Backlight</label></td>
+				<td><label class='phidinfo'>Contrast</label></td>
+				<td><label class='phidinfo'>Cursor</label></td>
+				<td><label class='phidinfo'>Blink</label></td>
+			</tr>
+			<tr>
+				<td><input type="range" id='$KEY_tBacklight' disabled="disabled" step="0.01" min="0" max="1" value="0" onInput="$KEY_lightChange()"></td>
+				<td><input type="range" id='$KEY_tContrast' disabled="disabled" step="0.01" min="0" max="1" value="0.3" onInput="$KEY_contChange()"></td>
+				<td><input type="checkbox" id='$KEY_cursor' disabled="disabled" onChange="$KEY_cursor()" value="0"></td>
+				<td><input type="checkbox" id='$KEY_blink' disabled="disabled" onChange="$KEY_cursor()" value="0"></td>
+			</tr>
+			<tr>
+				<td><input type='submit' style="width:95px" id='$KEY_clearButton' disabled="disabled" class='phidinfo' onclick='$KEY_clear()' value='Clear Screen'></td>
+			</tr>
+		</table>
+		<table>
+			<tr>
+				<td align="center"><label class='phidinfo'>X</label></td>
+				<td align="center"><label class='phidinfo'>Y</label></td>
+			</tr>
+			<tr>
+				<td align="center"><input type="number" class='phidinfo' style="width: 50px" id='$KEY_tTextX' value="0"></td>
+				<td align="center"><input type="number" class='phidinfo' style="width: 50px" id='$KEY_tTextY' value="0"></td>
+				<td>
+					<input type='submit' style="width:70px" class='phidinfo' disabled="disabled" id='$KEY_writeButton' onclick='$KEY_writeText()' value='Write'>
+					<input type='submit' style="width:40px" class='phidinfo' disabled="disabled" id='$KEY_customButton' onclick='$KEY_writeCustom()' value=':)'>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="3"><input type='text' class='phidinfo' id='$KEY_tText' size='40' value='hello world'></td>
+			</tr>
+		</table>
+		<br />
+	</fieldset>
+	<fieldset id="$KEY_graphicField">
+		<legend><label class='phidinfo'>Graphic LCD</label></legend>
+		<table>
+			<tr>
+				<td colspan="2"><label id='$KEY_screenSize' class='phidinfosmall'></label></td>
+				<td><label class='phidinfosmall'>Frame Buffer:</label></td>
+				<td>
+					<select style="font-size:10px;" class='phidinfosmall' onChange="$KEY_frameChange()" id='$KEY_frameCombo'>
+						<optgroup>
+							<option value="0">0</option>
+							<option value="1">1</option>
+							<option value="2">2</option>
+						</optgroup>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td><label class='phidinfosmall'>Backlight:</label></td>
+				<td><input type="range" id='$KEY_gBacklight' step="0.01" min="0" max="1" value="0" onInput="$KEY_lightChange()"></td>
+				<td><label class='phidinfosmall'>Contrast:</label></td>
+				<td><input type="range" id='$KEY_gContrast' step="0.01" min="0" max="1" value="0.3" onInput="$KEY_contChange()"></td>
+			</tr>
+			<tr>
+				<td><input type='submit' style="width:75px" id='$KEY_clearButton' class='phidinfosmall' onclick='$KEY_clear()' value='Clear Scr.'></td>
+				<td><input type='submit' style="width:75px" id='$KEY_logoButton' class='phidinfosmall' onclick='$KEY_writeBitmap()' value='Draw Logo'></td>
+				<td><input type='submit' style="width:65px" id='$KEY_sleepButton' class='phidinfosmall' onclick='$KEY_sleep()' value='Sleep'></td>
+				<td><input type='submit' style="width:100px" id='$KEY_saveButton' class='phidinfosmall' onclick='$KEY_saveFrame()' value='Save to Flash'></td>
+			</tr>
+		</table>
+		<br />
+		<label class='phidinfo'>Draw Pixel</label>
+		<div class='subsection'>
+			<table>
+				<tr>
+					<td align="center"><label class='phidinfosmall'>X:</label></td>
+					<td><input type="number" class='phidinfosmall' style="width: 50px" id='$KEY_drawPixX' value="22" min="0" max="127"></td>
+					<td align="center"><label class='phidinfosmall'>Y:</label></td>
+					<td><input type="number" class='phidinfosmall' style="width: 50px" id='$KEY_drawPixY' value="33" min="0" max="63"></td>
+					<td align="center"><label class='phidinfosmall'>Erase:</label></td>
+					<td><input type="checkbox" id='$KEY_drawPixInv' name="Inverted"></td>
+					<td><input type='submit' size='14' id='$KEY_drawPixButton' class='phidinfosmall' onclick='$KEY_drawPixel()' value='Draw Pixel'></td>
+				</tr>
+			</table>
+		</div>
+		<br />
+		<label class='phidinfo'>Draw Line</label>
+		<div class='subsection'>
+			<table>
+				<tr>
+					<td align="center"><label class='phidinfosmall'>X<sub>1</sub>:</label></td>
+					<td><input type="number" class='phidinfosmall' style="width: 50px" id='$KEY_drawLinX1' value="15" min="0" max="127"></td>
+					<td align="center"><label class='phidinfosmall'>Y<sub>1</sub>:</label></td>
+					<td><input type="number" class='phidinfosmall' style="width: 50px" id='$KEY_drawLinY1' value="30" min="0" max="63"></td>
+					<td align="center"><label class='phidinfosmall'>X<sub>2</sub>:</label></td>
+					<td><input type="number" class='phidinfosmall' style="width: 50px" id='$KEY_drawLinX2' value="25" min="0" max="127"></td>
+					<td align="center"><label class='phidinfosmall'>Y<sub>2</sub>:</label></td>
+					<td><input type="number" class='phidinfosmall' style="width: 50px" id='$KEY_drawLinY2' value="40" min="0" max="63"></td>
+					<td><input type='submit' size='14' id='$KEY_drawLinButton' class='phidinfo' onclick='$KEY_drawLine()' value='Draw Line'></td>
+				</tr>
+			</table>
+		</div>
+		<br />
+		<label class='phidinfo'>Draw Rectangle</label>
+		<div class='subsection'>
+			<table>
+				<tr>
+					<td align="center"><label class='phidinfosmall'>X<sub>1</sub></label></td>
+					<td align="center"><label class='phidinfosmall'>Y<sub>1</sub></label></td>
+					<td align="center"><label class='phidinfosmall'>X<sub>2</sub></label></td>
+					<td align="center"><label class='phidinfosmall'>Y<sub>2</sub></label></td>
+					<td align="center"><label class='phidinfosmall'>Fill</label></td>
+					<td align="center"><label class='phidinfosmall'>Erase</label></td>
+				</tr>
+				<tr>
+					<td><input type="number" class='phidinfosmall' style="width: 50px" id='$KEY_drawRectX1' value="20" min="0" max="127"></td>
+					<td><input type="number" class='phidinfosmall' style="width: 50px" id='$KEY_drawRectY1' value="25" min="0" max="63"></td>
+					<td><input type="number" class='phidinfosmall' style="width: 50px" id='$KEY_drawRectX2' value="30" min="0" max="127"></td>
+					<td><input type="number" class='phidinfosmall' style="width: 50px" id='$KEY_drawRectY2' value="35" min="0" max="63"></td>
+					<td><input type="checkbox" id='$KEY_drawRectFill' name="Filled"></td>
+					<td><input type="checkbox" id='$KEY_drawRectInv' name="Inverted"></td>
+					<td><input type='submit' style="width:105px" id='$KEY_drawRectButton' class='phidinfosmall' onclick='$KEY_drawRect()' value='Draw Rectangle'></td>
+				</tr>
+			</table>
+		</div>
+		<br />
+		<label class='phidinfo'>Copy Region</label>
+		<div class='subsection'>
+			<table>
+				<tr>
+					<td align="center"><label class='phidinfosmall'>srcX<sub>1</sub></label></td>
+					<td align="center"><label class='phidinfosmall'>srcY<sub>1</sub></label></td>
+					<td align="center"><label class='phidinfosmall'>srcX<sub>2</sub></label></td>
+					<td align="center"><label class='phidinfosmall'>srcY<sub>2</sub></label></td>
+					<td align="center"><label class='phidinfosmall'>dstX</label></td>
+					<td align="center"><label class='phidinfosmall'>dstY</label></td>
+				</tr>
+				<tr>
+					<td><input type="number" class='phidinfosmall' style="width: 50px" id='$KEY_cpyX1' value="20" min="0" max="127"></td>
+					<td><input type="number" class='phidinfosmall' style="width: 50px" id='$KEY_cpyY1' value="25" min="0" max="63"></td>
+					<td><input type="number" class='phidinfosmall' style="width: 50px" id='$KEY_cpyX2' value="30" min="0" max="127"></td>
+					<td><input type="number" class='phidinfosmall' style="width: 50px" id='$KEY_cpyY2' value="35" min="0" max="63"></td>
+					<td><input type="number" class='phidinfosmall' style="width: 50px" id='$KEY_cpyX' value="40" min="0" max="127"></td>
+					<td><input type="number" class='phidinfosmall' style="width: 50px" id='$KEY_cpyY' value="25" min="0" max="63"></td>
+				</tr>
+				<tr>
+					<td align="center"><label class='phidinfosmall'>Invert:</label></td>
+					<td><input align="center" type="checkbox" id='$KEY_cpyInv' name="Inverted"></td>
+					<td align="center"><label class='phidinfosmall'>srcFrame:</label></td>
+					<td><input type="number" class='phidinfosmall' style="width: 30px" id='$KEY_src' value="0"></td>
+					<td align="center"><label class='phidinfosmall'>dstFrame:</label></td>
+					<td><input type="number" class='phidinfosmall' style="width: 30px" id='$KEY_dst' value="0"></td>
+					<td><input type='submit' style="width:60px" id='$KEY_cpyButton' class='phidinfosmall' onclick='$KEY_copy()' value='Copy'></td>
+				</tr>
+			</table>
+		</div>
+		<br />
+		<label class='phidinfo'>Write Text</label>
+		<div class='subsection'>
+			<table>
+				<tr>
+					<td align="center"><label class='phidinfosmall'>X:</label></td>
+					<td><input type="number" class='phidinfosmall' style="width: 50px" id='$KEY_textX' value="30" min="0" max="127"></td>
+					<td align="center"><label class='phidinfosmall'>Y:</label></td>
+					<td><input type="number" class='phidinfosmall' style="width: 50px" id='$KEY_textY' value="1" min="0" max="63"></td>
+					<td align="center"><label class='phidinfosmall'>Font:</label></td>
+					<td>
+						<select style="font-size:10px;" class='phidinfosmall' id='$KEY_fontCombo'>
+							<optgroup>
+								<option value="3">6x10</option>
+								<option value="4">5x8</option>
+								<option value="5">6x12</option>
+								<option value="1">Custom1</option>
+							</optgroup>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="5"><input type='text' class='phidinfosmall' id='$KEY_gText' size='40' value='hello world'></td>
+					<td><input type='submit' style="width:70px" class='phidinfosmall' onclick='$KEY_writegText()' value='Write'></td>
+				</tr>
+			</table>
+		</div>
+	</fieldset>
+	<fieldset class="errorField" id="$KEY_errorField">
+		<legend><label class='phidinfo'>Errors</label></legend>
+		<div id="$KEY_errScroll" class="errScroll">
+			<table class="errorTable" id="$KEY_errorTable">
+				<col width="80">
+				<col width="80">
+				<col width="160">
+				<thead>
+					<tr>
+						<th align='left'><label>Time</label></th>
+						<th align='center'><label>Error #</label></th>
+						<th align='center'><label>Desc</label></th>
+						<th><input type='submit' size='9' class='phidinfo' onclick='$KEY_errClear()' value='Clear'></th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+			</table>
+		</div>
+	</fieldset>
+</body>
+</html>

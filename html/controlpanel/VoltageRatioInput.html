@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+<script>
+	VoltageRatioInputExample = {}
+
+	var $KEY_phid;
+	var $KEY_errOn = false;
+
+	VoltageRatioInputExample.setup = function(phid) {
+
+		$KEY_phid = phid;
+		phid.onVoltageRatioChange = $KEY_ratioChange;
+		phid.onSensorChange = $KEY_svChange;
+		phid.onError = $KEY_onError;
+		phid.onPropertyChange = $KEY_propChange;
+
+		$('#$KEY_di').val(phid.getDataInterval());
+		$('#$KEY_ct').val(phid.getVoltageRatioChangeTrigger());
+
+		switch(phid.getDeviceID()) {
+			case phidget22.DeviceID.PN_1046:
+				$KEY_phid.setBridgeGain($('#$KEY_gainCombo').val());
+				$('#$KEY_sensorLabel').hide();
+				$('#$KEY_sensorCombo').hide();
+				$('#$KEY_sensorValue').hide();
+				$('#$KEY_unit').hide();
+				$("#$KEY_gainCombo option[value='2']").remove();
+				$("#$KEY_gainCombo option[value='3']").remove();
+				break;
+			case phidget22.DeviceID.PN_DAQ1500:
+				$('#$KEY_gainCombo').val(phid.getBridgeGain());
+				$('#$KEY_enableLabel').hide();
+				$('#$KEY_enableBox').hide();
+				$('#$KEY_sensorLabel').hide();
+				$('#$KEY_sensorCombo').hide();
+				$('#$KEY_sensorValue').hide();
+				$('#$KEY_unit').hide();
+				$("#$KEY_gainCombo option[value='3']").remove();
+				$("#$KEY_gainCombo option[value='4']").remove();
+				$("#$KEY_gainCombo option[value='5']").remove();
+				$("#$KEY_gainCombo option[value='6']").remove();
+				break;
+			case phidget22.DeviceID.PN_HIN1100:
+				$('#$KEY_sensorLabel').hide();
+				$('#$KEY_sensorCombo').hide();
+				$('#$KEY_sensorValue').hide();
+				$('#$KEY_unit').hide();
+				$('#$KEY_gainCombo').hide();
+				$('#$KEY_gainLabel').hide();
+				$('#$KEY_enableLabel').hide();
+				$('#$KEY_enableBox').hide();
+				break;
+			case phidget22.DeviceID.PN_1065:
+				$('#$KEY_gainCombo').hide();
+				$('#$KEY_gainLabel').hide();
+				$('#$KEY_enableLabel').hide();
+				$('#$KEY_enableBox').hide();
+				break;
+			default: 
+				$('#$KEY_gainCombo').hide();
+				$('#$KEY_gainLabel').hide();
+				$('#$KEY_enableLabel').hide();
+				$('#$KEY_enableBox').hide();
+		}
+	}
+
+	function $KEY_propChange(prop) {
+
+		if(prop === 'DataInterval')
+			$('#$KEY_di').val(this.getDataInterval());
+
+		if(prop === 'VoltageRatioChangeTrigger')
+			$('#$KEY_ct').val(this.getVoltageRatioChangeTrigger());
+
+		if(prop === 'BridgeEnabled')
+			$('#$KEY_enableBox').prop("checked", this.getBridgeEnabled());
+
+		if(prop === 'BridgeGain')
+			$('#$KEY_gainCombo').val(this.getBridgeGain());
+
+		if(prop === 'SensorType')
+			$('#$KEY_sensorCombo').val(this.getSensorType());
+
+		if(prop === 'DeviceLabel')
+			$('#$KEY_labelValue').text(this.getDeviceLabel());
+	}
+
+	function $KEY_ratioChange(ratio) {
+
+		$('#$KEY_VoltageRatio').val(ratio);
+	}
+
+	function $KEY_svChange(sensorValue, sensorUnit) {
+
+		$('#$KEY_sensorValue').val(sensorValue);
+		$('#$KEY_unit').text(sensorUnit.symbol);
+	}
+
+	function $KEY_sensorChange() {
+
+		$KEY_phid.setSensorType($('#$KEY_sensorCombo').val());
+	}
+
+	function $KEY_enableChange() {
+
+		$KEY_phid.setBridgeEnabled($('#$KEY_enableBox')[0].checked);
+	}
+
+	function $KEY_gainChange() {
+
+		$KEY_phid.setBridgeGain($('#$KEY_gainCombo').val());
+	}
+
+	function $KEY_onError(code, msg) {
+
+		var d = new Date();
+		var h = d.getHours();
+		var m = d.getMinutes();
+		var s = d.getSeconds();
+		var ms = d.getMilliseconds();
+		var tr = $('<tr>');
+
+		tr.append('<td class="errTable"> ' + h + ':' + m + ':' + s + '.' + ms);
+		tr.append('<td class="errTableRed"> 0x' + code.toString(16));
+		tr.append('<td class="errTable">' + msg);
+		$('#$KEY_errorTable').append(tr);
+		$("#$KEY_errScroll").scrollTop($("#$KEY_errScroll")[0].scrollHeight);
+		$("#$KEY_errorField").show();
+	}
+
+	function $KEY_errClear() {
+
+		$('#$KEY_errorTable tbody').remove();
+	}
+
+	function $KEY_setDI() {
+
+		var di = Number($('#$KEY_di').val());
+		if(isNaN(di))
+			return (false);
+
+		if(di < $KEY_phid.getMinDataInterval()) {
+			di = $KEY_phid.getMinDataInterval();
+			$('#$KEY_di').val(di);
+		}
+
+		if(di > $KEY_phid.getMaxDataInterval()) {
+			di = $KEY_phid.getMaxDataInterval();
+			$('#$KEY_di').val(di);
+		}
+
+		$KEY_phid.setDataInterval(di);
+		return (false);
+	}
+
+	function $KEY_setCT() {
+
+		var ct = Number($('#$KEY_ct').val());
+		if(isNaN(ct))
+			return (false);
+
+		if(ct < $KEY_phid.getMinVoltageRatioChangeTrigger()) {
+			ct = $KEY_phid.getMinVoltageRatioChangeTrigger();
+			$('#$KEY_ct').val(ct);
+		}
+
+		if(ct > $KEY_phid.getMaxVoltageRatioChangeTrigger()) {
+			ct = $KEY_phid.getMaxVoltageRatioChangeTrigger() - 0.1;
+			$('#$KEY_ct').val(ct);
+		}
+
+
+		$KEY_phid.setVoltageRatioChangeTrigger(ct);
+		return (false);
+	}
+
+</script>
+<body>
+	<fieldset>
+		<legend><label class='phidinfo'>Settings</label></legend>
+		<table>
+			<tr>
+				<td><label class='phidinfo'>Data Interval</label></td>
+				<td><input type='text' class='phidinfo' id='$KEY_di' size='7' value='30'></input></td>
+				<td><input type='submit' size='9' class='phidinfo' id='$KEY_diButton' onclick='$KEY_setDI()' value='Set'></input></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>Change Trigger</label></td>
+				<td><input type='text' class='phidinfo' id='$KEY_ct' size='7' value='0.0'></input></td>
+				<td><input type='submit' size='9' class='phidinfo' onclick='$KEY_setCT()' value='Set'></input></td>
+			</tr>
+			<tr>
+				<td><label id='$KEY_gainLabel' class='phidinfo'>Bridge Gain</label></td>
+				<td>
+					<select class='phidinfo' onChange='$KEY_gainChange()' id='$KEY_gainCombo'>
+						<option value="1">1x</option>
+						<option value="2">2x</option>
+						<option value="3">4x</option>
+						<option value="4">8x</option>
+						<option value="5">16x</option>
+						<option value="6">32x</option>
+						<option value="7">64x</option>
+						<option value="8">128x</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td><label id='$KEY_enableLabel' class='phidinfo'>Enabled</label></td>
+				<td><input type="checkbox" id='$KEY_enableBox' onChange="$KEY_enableChange()" value="0" checked></input></td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset>
+		<legend><label class='phidinfo'>Data</label></legend>
+		<table>
+			<tr>
+				<td><label>VoltageRatio</label></td>
+			</tr>
+			<tr>
+				<td><input readonly type='text' id='$KEY_VoltageRatio' value="0"></td>
+			</tr>
+			<tr>
+				<td>
+					<label class='phidinfo' id='$KEY_sensorLabel'>Sensor Type:</label>
+					<select class='phidinfo' onChange='$KEY_sensorChange()' id='$KEY_sensorCombo'>
+						<option value="0">  Voltage Ratio </option>
+						<option value="11011"> 1101 - IR Distance (4-30cm) </option>
+						<option value="11012"> 1101 - IR Distance (10-80cm) </option>
+						<option value="11013"> 1101 - IR Distance (20-150cm) </option>
+						<option value="11020"> 1102 - IR Reflective Sensor 5mm </option>
+						<option value="11030"> 1103 - IR Reflective Sensor 10cm </option>
+						<option value="11040"> 1104 - Vibration Sensor </option>
+						<option value="11050"> 1105 - Light Sensor </option>
+						<option value="11060"> 1106 - Force Sensor </option>
+						<option value="11070"> 1107 - Humidity Sensor </option>
+						<option value="11080"> 1108 - Magnetic Sensor </option>
+						<option value="11090"> 1109 - Rotation Sensor </option>
+						<option value="11100"> 1110 - Touch Sensor </option>
+						<option value="11110"> 1111 - Motion Sensor </option>
+						<option value="11120"> 1112 - Slider 60 </option>
+						<option value="11130"> 1113 - Mini Joy Stick Sensor </option>
+						<option value="11150"> 1115 - Pressure Sensor </option>
+						<option value="11160"> 1116 - Multi-turn Rotation Sensor </option>
+						<option value="11181"> 1118 - 50Amp Current Sensor AC </option>
+						<option value="11182"> 1118 - 50Amp Current Sensor DC </option>
+						<option value="11191"> 1119 - 20Amp Current Sensor AC </option>
+						<option value="11192"> 1119 - 20Amp Current Sensor DC </option>
+						<option value="11200"> 1120 - FlexiForce Adapter </option>
+						<option value="11210"> 1121 - Voltage Divider </option>
+						<option value="11221"> 1122 - 30 Amp Current Sensor AC </option>
+						<option value="11222"> 1122 - 30 Amp Current Sensor DC </option>
+						<option value="11240"> 1124 - Precision Temperature Sensor </option>
+						<option value="11251"> 1125 - Humidity Sensor </option>
+						<option value="11252"> 1125 - Temperature Sensor </option>
+						<option value="11260"> 1126 - Diff. Air Pressure Sensor +- 25kPa </option>
+						<option value="11280"> 1128 - MaxBotix EZ-1 Sonar Sensor </option>
+						<option value="11290"> 1129 - Touch Sensor </option>
+						<option value="11310"> 1131 - Thin Force Sensor </option>
+						<option value="11340"> 1134 - Switchable Voltage Divider </option>
+						<option value="11360"> 1136 - Diff. Air Pressure Sensor +-2 kPa </option>
+						<option value="11370"> 1137 - Diff. Air Pressure Sensor +-7 kPa </option>
+						<option value="11380"> 1138 - Diff. Air Pressure Sensor 50 kPa </option>
+						<option value="11390"> 1139 - Diff. Air Pressure Sensor 100 kPa </option>
+						<option value="11400"> 1140 - Abs. Air Pressure Sensor 20-400 kPa </option>
+						<option value="11410"> 1141 - Abs. Air Pressure Sensor 15-115 kPa </option>
+						<option value="11460"> 1146 - IR Reflective Sensor 1-4mm </option>
+						<option value="31200"> 3120 - Compression Load Cell (0-4.5 kg) </option>
+						<option value="31210"> 3121 - Compression Load Cell (0-11.3 kg) </option>
+						<option value="31220"> 3122 - Compression Load Cell (0-22.7 kg) </option>
+						<option value="31230"> 3123 - Compression Load Cell (0-45.3 kg) </option>
+						<option value="31300"> 3130 - Relative Humidity Sensor </option>
+						<option value="35200"> 3520 - Sharp Distance Sensor (4-30cm) </option>
+						<option value="35210"> 3521 - Sharp Distance Sensor (10-80cm) </option>
+						<option value="35220"> 3522 - Sharp Distance Sensor (20-150cm) </option>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td><input readonly type='text' id='$KEY_sensorValue' value="0"><label id='$KEY_unit' class='phidinfo'>V/V</label></td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset class="errorField" id="$KEY_errorField">
+		<legend><label class='phidinfo'>Errors</label></legend>
+		<div id="$KEY_errScroll" class="errScroll">
+			<table class="errorTable" id="$KEY_errorTable">
+				<col width="80">
+				<col width="80">
+				<col width="160">
+				<thead>
+					<tr>
+						<th align='left'><label>Time</label></th>
+						<th align='center'><label>Error #</label></th>
+						<th align='center'><label>Desc</label></th>
+						<th><input type='submit' size='9' class='phidinfo' onclick='$KEY_errClear()' value='Clear'></th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+			</table>
+		</div>
+	</fieldset>
+</body>
+</html>

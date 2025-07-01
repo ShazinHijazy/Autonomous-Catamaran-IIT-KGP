@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html>
+<script>
+	SpatialExample = {}
+
+	var $KEY_phid;
+	var $KEY_errOn = false;
+
+	SpatialExample.setup = function (phid) {
+
+		$KEY_phid = phid;
+		$KEY_phid.onError = $KEY_onError;
+		$KEY_phid.onPropertyChange = $KEY_propChange;
+
+		var gyrMin = phid.minAngularRate[0];
+		var gyrMax = phid.maxAngularRate[0];
+		var magMin = phid.minMagneticField[0];
+		var magMax = phid.maxMagneticField[0];
+		var accMin = phid.minAcceleration[0];
+		var accMax = phid.maxAcceleration[0];
+
+		switch ($KEY_phid.channelSubclass) {
+			case phidget22.ChannelSubclass.SPATIAL_AHRS:
+				$('#$KEY_accelField').hide();
+				$('#$KEY_gyroField').hide();
+				$('#$KEY_magnField').hide();
+				$('#$KEY_magnCalibField').hide();
+
+				$('#$KEY_quaternionField').show();
+				$('#$KEY_ahrsField').show();
+				$KEY_phid.setAlgorithm(0x1);
+				$KEY_phid.onAlgorithmData = $KEY_dataInAlg;
+				break;
+			default:
+				$KEY_phid.onSpatialData = $KEY_dataIn;
+				$('#$KEY_heatingField').hide();
+				$('#$KEY_quaternionField').hide();
+				$('#$KEY_ahrsField').hide();
+				break;
+		}
+
+		switch ($KEY_phid.getDeviceID()) {
+			case phidget22.DeviceID.PN_MOT0109:
+			case phidget22.DeviceID.PN_MOT0110:
+				$('#$KEY_heatingField').show();
+				$('#$KEY_heating').prop("checked", phid.getHeatingEnabled());
+				break;
+			default:
+				$('#$KEY_heatingField').hide();
+				break;
+		}
+
+		$('.gyrdial').knob({
+			min: gyrMin,
+			max: gyrMax,
+			step: 0.001,
+			readOnly: true,
+			width: 60,
+			height: 60,
+			fgColor: '#000000',
+			thickness: 0.1,
+			skin: 'tron'
+		});
+
+		$('.accdial').knob({
+			min: accMin,
+			max: accMax,
+			step: 0.001,
+			readOnly: true,
+			width: 60,
+			height: 60,
+			fgColor: '#000000',
+			thickness: 0.1,
+			skin: 'tron'
+		});
+
+		$('.magdial').knob({
+			min: magMin,
+			max: magMax,
+			step: 0.001,
+			readOnly: true,
+			width: 60,
+			height: 60,
+			fgColor: '#000000',
+			thickness: 0.1,
+			skin: 'tron'
+		});
+
+		$('#$KEY_di').val(phid.getDataInterval());
+
+	}
+
+	function $KEY_propChange(prop) {
+
+		if (prop === 'DataInterval')
+			$('#$KEY_di').val(this.getDataInterval());
+		if (prop === 'HeatingEnabled')
+			$('#$KEY_heating').prop("checked", this.getHeatingEnabled());
+	}
+
+	function $KEY_dataIn(acc, gyr, mag, ts) {
+		
+		$('#$KEY_T').text(ts);
+		$('#$KEY_gX').val(gyr[0]).trigger('change');
+		$('#$KEY_gY').val(gyr[1]).trigger('change');
+		$('#$KEY_gZ').val(gyr[2]).trigger('change');
+
+		$('#$KEY_aX').val(acc[0]).trigger('change');
+		$('#$KEY_aY').val(acc[1]).trigger('change');
+		$('#$KEY_aZ').val(acc[2]).trigger('change');
+
+		$('#$KEY_mX').val(mag[0]).trigger('change');
+		$('#$KEY_mY').val(mag[1]).trigger('change');
+		$('#$KEY_mZ').val(mag[2]).trigger('change');
+	}
+
+	function $KEY_dataInAlg(quaternion, ts) {
+
+		$('#$KEY_T').text(ts);
+		$('#$KEY_qX').text(quaternion[0]).trigger('change');
+		$('#$KEY_qY').text(quaternion[1]).trigger('change');
+		$('#$KEY_qZ').text(quaternion[2]).trigger('change');
+		$('#$KEY_qW').text(quaternion[3]).trigger('change');
+
+		$('#$KEY_eP').text(this.eulerAngles.pitch).trigger('change');
+		$('#$KEY_eR').text(this.eulerAngles.roll).trigger('change');
+		$('#$KEY_eH').text(this.eulerAngles.heading).trigger('change');
+	}
+
+	function $KEY_setDI() {
+
+		var di = Number($('#$KEY_di').val());
+		if(isNaN(di))
+			return (false);
+
+		if (di < $KEY_phid.getMinDataInterval()) {
+			di = $KEY_phid.getMinDataInterval();
+			$('#$KEY_di').val(di);
+		}
+
+		if (di > $KEY_phid.getMaxDataInterval()) {
+			di = $KEY_phid.getMaxDataInterval();
+			$('#$KEY_di').val(di);
+		}
+
+		$KEY_phid.setDataInterval(di);
+		return (false);
+	}
+
+	function $KEY_zeroGyro() {
+
+		$KEY_phid.zeroGyro();
+	}
+
+	function $KEY_resetCal() {
+
+		$KEY_phid.resetCompassCorrectionParameters();
+		$('#$KEY_magField').val(1).trigger('change');
+		$('#$KEY_offset0').val(0).trigger('change');
+		$('#$KEY_offset1').val(0).trigger('change');
+		$('#$KEY_offset2').val(0).trigger('change');
+		$('#$KEY_gain0').val(1).trigger('change');
+		$('#$KEY_gain1').val(1).trigger('change');
+		$('#$KEY_gain2').val(1).trigger('change');
+		$('#$KEY_t0').val(0).trigger('change');
+		$('#$KEY_t1').val(0).trigger('change');
+		$('#$KEY_t2').val(0).trigger('change');
+		$('#$KEY_t3').val(0).trigger('change');
+		$('#$KEY_t4').val(0).trigger('change');
+		$('#$KEY_t5').val(0).trigger('change');
+	}
+
+	function $KEY_setCal() {
+
+		var mag = Number($('#$KEY_magField').val());
+		var off0 = Number($('#$KEY_offset0').val());
+		var off1 = Number($('#$KEY_offset1').val());
+		var off2 = Number($('#$KEY_offset2').val());
+		var gn0 = Number($('#$KEY_gain0').val());
+		var gn1 = Number($('#$KEY_gain1').val());
+		var gn2 = Number($('#$KEY_gain2').val());
+		var t0 = Number($('#$KEY_t0').val());
+		var t1 = Number($('#$KEY_t1').val());
+		var t2 = Number($('#$KEY_t2').val());
+		var t3 = Number($('#$KEY_t3').val());
+		var t4 = Number($('#$KEY_t4').val());
+		var t5 = Number($('#$KEY_t5').val());
+
+		$KEY_phid.setCompassCorrectionParameters(mag, off0, off1, off2, gn0, gn1, gn2, t0, t1, t2, t3, t4, t5);
+	}
+
+	function $KEY_selectAlgo() {
+		const algo = $('#$KEY_algoDD').val();
+		switch (algo) {
+			case "none":
+				$KEY_phid.setAlgorithm(0);
+				$('#$KEY_accelField').show();
+				$('#$KEY_gyroField').show();
+				$('#$KEY_magnField').show();
+				$('#$KEY_magnCalibField').show();
+
+				$('#$KEY_quaternionField').hide();
+				$KEY_phid.onSpatialData = $KEY_dataIn;
+				$KEY_phid.onAlgorithmData = () => { };
+				break;
+			case "ahrs":
+				$KEY_phid.setAlgorithm(1);
+				$('#$KEY_accelField').hide();
+				$('#$KEY_gyroField').hide();
+				$('#$KEY_magnField').hide();
+				$('#$KEY_magnCalibField').hide();
+
+				$('#$KEY_quaternionField').show();
+				$KEY_phid.onSpatialData = () => { };
+				$KEY_phid.onAlgorithmData = $KEY_dataInAlg;
+				break;
+			case "imu":
+				$KEY_phid.setAlgorithm(2);
+				$('#$KEY_accelField').hide();
+				$('#$KEY_gyroField').hide();
+				$('#$KEY_magnField').hide();
+				$('#$KEY_magnCalibField').hide();
+
+				$('#$KEY_quaternionField').show();
+				$KEY_phid.onSpatialData = () => { };
+				$KEY_phid.onAlgorithmData = $KEY_dataInAlg;
+				break;
+		}
+	}
+
+	function $KEY_setAHRSParams() {
+		const ahrsAVTh = $('#$KEY_ahrsAVTh').val();
+		const ahrsAVDTh = $('#$KEY_ahrsAVDTh').val();
+		const ahrsATh = $('#$KEY_ahrsATh').val();
+		const ahrsMT = $('#$KEY_ahrsMT').val();
+		const ahrsAT = $('#$KEY_ahrsAT').val();
+		const ahrsBT = $('#$KEY_ahrsBT').val();
+
+		$KEY_phid.setAHRSParameters(ahrsAVTh, ahrsAVDTh, ahrsATh, ahrsMT, ahrsAT, ahrsBT);
+	}
+
+	function $KEY_selectAHRSExample() {
+		const example = $('#$KEY_ahrsExample').val();
+		switch (example) {
+			case "gp":
+				$('#$KEY_ahrsAVTh').val("1.0");
+				$('#$KEY_ahrsAVDTh').val("0.1");
+				$('#$KEY_ahrsATh').val("0.05");
+				$('#$KEY_ahrsMT').val("10");
+				$('#$KEY_ahrsAT').val("10");
+				$('#$KEY_ahrsBT').val("1.25");
+				break;
+			case "noGyro":
+				$('#$KEY_ahrsAVTh').val("0.001");
+				$('#$KEY_ahrsAVDTh').val("0.5");
+				$('#$KEY_ahrsATh').val("2");
+				$('#$KEY_ahrsMT').val("0");
+				$('#$KEY_ahrsAT').val("0");
+				$('#$KEY_ahrsBT').val("1.25");
+				break;
+			case "allGyro":
+				$('#$KEY_ahrsAVTh').val("0.0");
+				$('#$KEY_ahrsAVDTh').val("0.0");
+				$('#$KEY_ahrsATh').val("0.0");
+				$('#$KEY_ahrsMT').val("1000");
+				$('#$KEY_ahrsAT').val("1000");
+				$('#$KEY_ahrsBT').val("1000");
+				break;
+			case "zeroed":
+				$('#$KEY_ahrsAVTh').val("0.5");
+				$('#$KEY_ahrsAVDTh').val("0.1");
+				$('#$KEY_ahrsATh').val("0.05");
+				$('#$KEY_ahrsMT').val("120");
+				$('#$KEY_ahrsAT').val("120");
+				$('#$KEY_ahrsBT').val("1.25");
+				break;
+			case "hiVib":
+				$('#$KEY_ahrsAVTh').val("5.0");
+				$('#$KEY_ahrsAVDTh').val("2.5");
+				$('#$KEY_ahrsATh').val("0.2");
+				$('#$KEY_ahrsMT').val("5");
+				$('#$KEY_ahrsAT').val("20");
+				$('#$KEY_ahrsBT').val("5");
+				break;
+		}
+		$KEY_setAHRSParams();
+	}
+
+	function $KEY_zeroAlgo() {
+		$KEY_phid.zeroAlgorithm();
+	}
+
+	function $KEY_setHeating() {
+		$KEY_phid.setHeatingEnabled($('#$KEY_heating').is(':checked'));
+	}
+
+	function $KEY_onError(code, msg) {
+
+		var d = new Date();
+		var h = d.getHours();
+		var m = d.getMinutes();
+		var s = d.getSeconds();
+		var ms = d.getMilliseconds();
+		var tr = $('<tr>');
+
+		tr.append('<td class="errTable"> ' + h + ':' + m + ':' + s + '.' + ms);
+		tr.append('<td class="errTableRed"> 0x' + code.toString(16));
+		tr.append('<td class="errTable">' + msg);
+		$('#$KEY_errorTable').append(tr);
+		$("#$KEY_errScroll").scrollTop($("#$KEY_errScroll")[0].scrollHeight);
+		$("#$KEY_errorField").show();
+	}
+
+	function $KEY_errClear() {
+
+		$('#$KEY_errorTable tbody').remove();
+	}
+
+</script>
+
+<body>
+	<fieldset>
+		<legend><label class='phidinfo'>Settings</label></legend>
+		<table>
+			<tr>
+				<td><label class='phidinfo'>Data Interval</label></td>
+				<td><input type='text' class='phidinfo' id='$KEY_di' size='7' value='30'></input></td>
+				<td><input type='submit' size='9' class='phidinfo' onclick='$KEY_setDI()' value='Set'></input></td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset>
+		<legend><label class='phidinfo'>Timestamp</label></legend>
+		<table>
+			<tr>
+				<td align='right' width='50px' padding-left='50px' box-sizing='border-box'>
+					<label class='phidinfo' id='$KEY_T'></label>
+				</td>
+				<td>
+					<label class='phidinfo'>ms</label>
+				</td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset id="$KEY_accelField">
+		<legend><label class='phidinfo'>Accelerometer Data (g-force)</label></legend>
+		<table>
+			<tr>
+				<td align='center'><label>X</label></td>
+				<td align='center'><label>Y</label></td>
+				<td align='center'><label>Z</label></td>
+			</tr>
+			<tr>
+				<td><input id='$KEY_aX' class="accdial" value="0"></td>
+				<td><input id='$KEY_aY' class="accdial" value="0"></td>
+				<td><input id='$KEY_aZ' class="accdial" value="0"></td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset id="$KEY_gyroField">
+		<legend><label class='phidinfo'>Gyroscope Data (&deg/s)</label></legend>
+		<table>
+			<tr>
+				<td align='center'><label>X</label></td>
+				<td align='center'><label>Y</label></td>
+				<td align='center'><label>Z</label></td>
+			</tr>
+			<tr>
+				<td><input id='$KEY_gX' class="gyrdial" value="0"></td>
+				<td><input id='$KEY_gY' class="gyrdial" value="0"></td>
+				<td><input id='$KEY_gZ' class="gyrdial" value="0"></td>
+			</tr>
+		</table>
+		<input type='submit' style="width:130px" class='phidinfo' onclick='$KEY_zeroGyro()'
+			value='Zero Gyroscope'></input>
+	</fieldset>
+	<fieldset id="$KEY_magnField">
+		<legend><label class='phidinfo'>Magnetometer Data (Gauss)</label></legend>
+		<table>
+			<tr>
+				<td align='center'><label>X</label></td>
+				<td align='center'><label>Y</label></td>
+				<td align='center'><label>Z</label></td>
+			</tr>
+			<tr>
+				<td><input id='$KEY_mX' class="magdial" value="0"></td>
+				<td><input id='$KEY_mY' class="magdial" value="0"></td>
+				<td><input id='$KEY_mZ' class="magdial" value="0"></td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset id="$KEY_magnCalibField">
+		<legend><label class='phidinfo'>Magnetometer Calibration</label></legend>
+		<table>
+			<tr>
+				<td><label class='phidinfo'>magField</label></td>
+				<td><label class='phidinfo'>offset0</label></td>
+				<td><label class='phidinfo'>offset1</label></td>
+				<td><label class='phidinfo'>offset2</label></td>
+				<td><label class='phidinfo'>gain0</label></td>
+				<td><label class='phidinfo'>gain1</label></td>
+				<td><label class='phidinfo'>gain2</label></td>
+			</tr>
+			<tr>
+				<td><input type='text' class='phidinfo' id='$KEY_magField' size='4' value=''></input></td>
+				<td><input type='text' class='phidinfo' id='$KEY_offset0' size='4' value=''></input></td>
+				<td><input type='text' class='phidinfo' id='$KEY_offset1' size='4' value=''></input></td>
+				<td><input type='text' class='phidinfo' id='$KEY_offset2' size='4' value=''></input></td>
+				<td><input type='text' class='phidinfo' id='$KEY_gain0' size='4' value=''></input></td>
+				<td><input type='text' class='phidinfo' id='$KEY_gain1' size='4' value=''></input></td>
+				<td><input type='text' class='phidinfo' id='$KEY_gain2' size='4' value=''></input></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>T0</label></td>
+				<td><label class='phidinfo'>T1</label></td>
+				<td><label class='phidinfo'>T2</label></td>
+				<td><label class='phidinfo'>T3</label></td>
+				<td><label class='phidinfo'>T4</label></td>
+				<td><label class='phidinfo'>T5</label></td>
+				<td></td>
+			</tr>
+			<tr>
+				<td><input type='text' class='phidinfo' id='$KEY_t0' size='4' value=''></input></td>
+				<td><input type='text' class='phidinfo' id='$KEY_t1' size='4' value=''></input></td>
+				<td><input type='text' class='phidinfo' id='$KEY_t2' size='4' value=''></input></td>
+				<td><input type='text' class='phidinfo' id='$KEY_t3' size='4' value=''></input></td>
+				<td><input type='text' class='phidinfo' id='$KEY_t4' size='4' value=''></input></td>
+				<td><input type='text' class='phidinfo' id='$KEY_t5' size='4' value=''></input></td>
+				<td></input></td>
+			</tr>
+			<tr>
+				<td colspan="2"><input type='submit' size='5' class='phidinfo' onclick='$KEY_setCal()'
+						value='Submit'></input></td>
+				<td colspan="2"><input type='submit' size='5' class='phidinfo' onclick='$KEY_resetCal()' value='Reset'>
+				</td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset id='$KEY_quaternionField'>
+		<legend><label class='phidinfo'>AHRS Data</label></legend>
+		<table>
+			<tr>
+				<th><label class='phidinfo'>Quaternion</label></th>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>x: </label></td>
+				<td><label class='phidinfo' id='$KEY_qX'></label></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>y: </label></td>
+				<td><label class='phidinfo' id='$KEY_qY'></label></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>z: </label></td>
+				<td><label class='phidinfo' id='$KEY_qZ'></label></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>w: </label></td>
+				<td><label class='phidinfo' id='$KEY_qW'></label></td>
+			</tr>
+			<tr>
+				<th><label class='phidinfo'>Euler Angles</label></th>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>Pitch: </label></td>
+				<td><label class='phidinfo' id='$KEY_eP'></label></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>Roll: </label></td>
+				<td><label class='phidinfo' id='$KEY_eR'></label></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>Heading: </label></td>
+				<td><label class='phidinfo' id='$KEY_eH'></label></td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset id="$KEY_ahrsField">
+		<legend><label class='phidinfo'>AHRS Settings</label></legend>
+		<table>
+			<tr>
+				<td><label class='phidinfo'>Algorithm: </label></td>
+				<td>
+					<select id='$KEY_algoDD' onchange="$KEY_selectAlgo()">
+						<option value="none">None</option>
+						<option value="ahrs" selected>AHRS</option>
+						<option value="imu">IMU</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td><input type='submit' class='phidinfo' style="width:110px" onclick='$KEY_zeroAlgo()'
+						value='Zero Algorithm'></input></td>
+				<td><input type='submit' class='phidinfo' onclick='$KEY_zeroGyro()' value='Zero Gyro'></input></td>
+			</tr>
+			<tr>
+				<td></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>Example: </label></td>
+				<td>
+					<select id='$KEY_ahrsExample' onchange="$KEY_selectAHRSExample()">
+						<option value="gp" selected>General Purpose</option>
+						<option value="noGyro">No Gyro</option>
+						<option value="allGyro">All Gyro</option>
+						<option value="zeroed">Zeroed</option>
+						<option value="hiVib">High Vibrations</option>
+					</select>
+				</td>
+			</tr>
+		</table>
+		<fieldset id="$KEY_ahrsParamsField">
+			<legend><label class='phidinfo'>AHRS Parameters</label></legend>
+			<table>
+				<tr>
+					<td><label class='phidinfo'>Angular Velocity Threshold</label></td>
+					<td><input type='text' class='phidinfo' id='$KEY_ahrsAVTh' size='4' value='1.0'></input></td>
+					<td><label class='phidinfo'>Mag Time</label></td>
+					<td><input type='text' class='phidinfo' id='$KEY_ahrsMT' size='4' value='10'></input></td>
+				</tr>
+				<tr>
+					<td><label class='phidinfo'>Angular Vel Delta Threshold</label></td>
+					<td><input type='text' class='phidinfo' id='$KEY_ahrsAVDTh' size='4' value='0.1'></input></td>
+					<td><label class='phidinfo'>Accel Time</label></td>
+					<td><input type='text' class='phidinfo' id='$KEY_ahrsAT' size='4' value='10'></input></td>
+				</tr>
+				<tr>
+					<td><label class='phidinfo'>Acceleration Threshold</label></td>
+					<td><input type='text' class='phidinfo' id='$KEY_ahrsATh' size='4' value='0.1'></input></td>
+					<td><label class='phidinfo'>Bias Time</label></td>
+					<td><input type='text' class='phidinfo' id='$KEY_ahrsBT' size='4' value='1.25'></input></td>
+				</tr>
+				<tr>
+					<td align="center" colspan="4"><input type="submit" class='phidinfo' style="width:150px"
+							onclick='$KEY_setAHRSParams()' value='Set AHRS Parameters'></input></td>
+				</tr>
+			</table>
+		</fieldset>
+	</fieldset>
+	<fieldset id="$KEY_heatingField">
+		<legend><label class='phidinfo'>Temperature Compensation</label></legend>
+		<table>
+			<tr>
+				<td><label class='phidinfo'>Self-Heating Enabled</label></td>
+				<td><input id='$KEY_heating' type='checkbox' size='9' class='phidinfo'
+						onclick='$KEY_setHeating()'></input></td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset class="errorField" id="$KEY_errorField">
+		<legend><label class='phidinfo'>Errors</label></legend>
+		<div id="$KEY_errScroll" class="errScroll">
+			<table class="errorTable" id="$KEY_errorTable">
+				<col width="80">
+				<col width="80">
+				<col width="160">
+				<thead>
+					<tr>
+						<th align='left'><label>Time</label></th>
+						<th align='center'><label>Error #</label></th>
+						<th align='center'><label>Desc</label></th>
+						<th><input type='submit' size='9' class='phidinfo' onclick='$KEY_errClear()' value='Clear'></th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+			</table>
+		</div>
+	</fieldset>
+</body>
+
+</html>

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<script>
+	AccelerometerExample = {}
+
+	var $KEY_phid;
+	var $KEY_errOn = false;
+
+	AccelerometerExample.setup = function(phid) {
+
+		$KEY_phid = phid;
+		phid.onAccelerationChange = $KEY_accChange;
+		phid.onPropertyChange = $KEY_propChange;
+		phid.onError = $KEY_onError;
+
+		var accMin = phid.getMinAcceleration()[0];
+		var accMax = phid.getMaxAcceleration()[0];
+
+		$('#$KEY_heatingField').hide();
+		switch (phid.getDeviceID()) {
+			case phidget22.DeviceID.PN_MOT0109:
+			case phidget22.DeviceID.PN_MOT0110:
+				$('#$KEY_heatingField').show();
+				$('#$KEY_heating').prop("checked", phid.getHeatingEnabled());
+				break;
+			default:
+				$('#$KEY_heatingField').hide();
+				break;
+		}
+
+		$('.accdial').knob({
+			min: accMin,
+			max: accMax,
+			step: 0.001,
+			readOnly: true,
+			width: 120,
+			height: 120,
+			fgColor: '#000000',
+			fontWeight: '12px',
+			thickness: 0.1,
+			skin: 'tron'
+		});
+
+		$('#$KEY_di').val(phid.getDataInterval());
+		$('#$KEY_ct').val(phid.getAccelerationChangeTrigger());
+	}
+
+	function $KEY_propChange(prop) {
+
+		if(prop === 'DataInterval')
+			$('#$KEY_di').val(this.getDataInterval());
+
+		if(prop === 'AccelerationChangeTrigger')
+			$('#$KEY_ct').val(this.getAccelerationChangeTrigger());
+
+		if (prop === 'HeatingEnabled')
+			$('#$KEY_heating').prop("checked", this.getHeatingEnabled());
+	}
+
+	function $KEY_accChange(acc, ts) {
+
+		$('#$KEY_T').text(ts);
+		$('#$KEY_X').val(acc[0]).trigger('change');
+		$('#$KEY_Y').val(acc[1]).trigger('change');
+		$('#$KEY_Z').val(acc[2]).trigger('change');
+	}
+
+	function $KEY_setDI() {
+
+		var di = Number($('#$KEY_di').val());
+		if(isNaN(di))
+			return (false);
+
+		if(di < $KEY_phid.getMinDataInterval()) {
+			di = $KEY_phid.getMinDataInterval();
+			$('#$KEY_di').val(di);
+		}
+
+		if(di > $KEY_phid.getMaxDataInterval()) {
+			di = $KEY_phid.getMaxDataInterval();
+			$('#$KEY_di').val(di);
+		}
+
+		$KEY_phid.setDataInterval(di);
+		return (false);
+	}
+
+	function $KEY_setCT() {
+
+		var ct = Number($('#$KEY_ct').val());
+		if(isNaN(ct))
+			return (false);
+
+		$KEY_phid.setAccelerationChangeTrigger(ct);
+		return (false);
+	}
+	
+	function $KEY_setHeating() {
+		$KEY_phid.setHeatingEnabled($('#$KEY_heating').is(':checked'));
+	}
+
+	function $KEY_onError(code, msg) {
+
+		var d = new Date();
+		var h = d.getHours();
+		var m = d.getMinutes();
+		var s = d.getSeconds();
+		var ms = d.getMilliseconds();
+		var tr = $('<tr>');
+
+		tr.append('<td class="errTable"> ' + h + ':' + m + ':' + s + '.' + ms);
+		tr.append('<td class="errTableRed"> 0x' + code.toString(16));
+		tr.append('<td class="errTable">' + msg);
+		$('#$KEY_errorTable').append(tr);
+		$("#$KEY_errScroll").scrollTop($("#$KEY_errScroll")[0].scrollHeight);
+		$("#$KEY_errorField").show();
+	}
+
+	function $KEY_errClear() {
+
+		$('#$KEY_errorTable tbody').remove();
+	}
+
+</script>
+<body>
+	<fieldset>
+		<legend><label class='phidinfo'>Settings</label></legend>
+		<table>
+			<tr>
+				<td><label class='phidinfo'>Data Interval</label></td>
+				<td><input type='text' class='phidinfo' id='$KEY_di' size='7' value='30'></td>
+				<td><input type='submit' size='9' class='phidinfo' onclick='$KEY_setDI()' value='Set'></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>Change Trigger</label></td>
+				<td><input type='text' class='phidinfo' id='$KEY_ct' size='7' value='0.0'></td>
+				<td><input type='submit' size='9' class='phidinfo' onclick='$KEY_setCT()' value='Set'></td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset>
+		<legend><label class='phidinfo'>Accelerometer Data (g-force)</label></legend>
+		<table>
+			<tr>
+				<td colspan='3'>
+					<label class='phidinfo'>TimeStamp:</label><label class='phidinfo' id='$KEY_T'></label>
+				</td>
+			</tr>
+			<tr>
+				<td align='center'><label>X</label></td>
+				<td align='center'><label>Y</label></td>
+				<td align='center'><label>Z</label></td>
+			</tr>
+			<tr>
+				<td><input id='$KEY_X' class="accdial" value="0"></td>
+				<td><input id='$KEY_Y' class="accdial" value="0"></td>
+				<td><input id='$KEY_Z' class="accdial" value="0"></td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset id="$KEY_heatingField">
+		<legend><label class='phidinfo'>Temperature Compensation</label></legend>
+		<table>
+			<tr>
+				<td><label class='phidinfo'>Self-Heating Enabled</label></td>
+				<td><input id='$KEY_heating' type='checkbox' size='9' class='phidinfo' onclick='$KEY_setHeating()'></input></td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset class="errorField" id="$KEY_errorField">
+		<legend><label class='phidinfo'>Errors</label></legend>
+		<div id="$KEY_errScroll" class="errScroll">
+			<table class="errorTable" id="$KEY_errorTable">
+				<col width="80">
+				<col width="80">
+				<col width="160">
+				<thead>
+					<tr>
+						<th align='left'><label>Time</label></th>
+						<th align='center'><label>Error #</label></th>
+						<th align='center'><label>Desc</label></th>
+						<th><input type='submit' size='9' class='phidinfo' onclick='$KEY_errClear()' value='Clear'></th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+			</table>
+		</div>
+	</fieldset>
+</body>
+</html>

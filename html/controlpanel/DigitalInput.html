@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<script>
+	DigitalInputExample = {}
+
+	var $KEY_phid;
+	var $KEY_errOn = false;
+
+	DigitalInputExample.setup = function(phid) {
+
+		$KEY_phid = phid;
+		phid.onStateChange = $KEY_stateChange;
+		phid.onError = $KEY_onError;
+		phid.onPropertyChange = $KEY_propChange;
+
+		if($KEY_phid.getState())
+			$('#$KEY_state').prop("checked", true);
+
+		switch(phid.getDeviceID()) {
+			case phidget22.DeviceID.PN_1010_1013_1018_1019:
+			case phidget22.DeviceID.PN_1202_1203:
+			case phidget22.DeviceID.PN_1063_1067:
+			case phidget22.DeviceID.PN_1060:
+			case phidget22.DeviceID.PN_1065:
+			case phidget22.DeviceID.PN_1047:
+			case phidget22.DeviceID.PN_1057:
+			case phidget22.DeviceID.DIGITAL_INPUT_PORT:
+			case phidget22.DeviceID.PN_DAQ1300:
+			case phidget22.DeviceID.PN_DAQ1301:
+			case phidget22.DeviceID.PN_DAQ1200:
+			case phidget22.DeviceID.PN_HIN1100:
+				$('#$KEY_supplyLabel').hide();
+				$('#$KEY_supplyCombo').hide();
+				$('#$KEY_modeLabel').hide();
+				$('#$KEY_modeCombo').hide();
+				break;
+			case phidget22.DeviceID.PN_DAQ1400:
+				$('#$KEY_modeCombo').val(phid.getInputMode());
+				$('#$KEY_supplyCombo').val(phid.getPowerSupply());
+				break;
+			default:
+				break;
+		}
+
+
+	}
+
+	function $KEY_propChange(prop) {
+
+		if(prop === 'InputMode')
+			$('#$KEY_modeCombo').val(this.getInputMode());
+
+		if(prop === 'PowerSupply')
+			$('#$KEY_supplyCombo').val(this.getPowerSupply());
+	}
+
+	function $KEY_stateChange(state) {
+
+		if(state)
+			$('#$KEY_state').prop("checked", true);
+		else
+			$('#$KEY_state').prop("checked", false);
+	}
+
+	function $KEY_supplyChange() {
+
+		$KEY_phid.setPowerSupply($('#$KEY_supplyCombo').val());
+	}
+
+	function $KEY_modeChange() {
+
+		$KEY_phid.setInputMode($('#$KEY_modeCombo').val());
+	}
+
+	function $KEY_onError(code, msg) {
+
+		var d = new Date();
+		var h = d.getHours();
+		var m = d.getMinutes();
+		var s = d.getSeconds();
+		var ms = d.getMilliseconds();
+		var tr = $('<tr>');
+
+		tr.append('<td class="errTable"> ' + h + ':' + m + ':' + s + '.' + ms);
+		tr.append('<td class="errTableRed"> 0x' + code.toString(16));
+		tr.append('<td class="errTable">' + msg);
+		$('#$KEY_errorTable').append(tr);
+		$("#$KEY_errScroll").scrollTop($("#$KEY_errScroll")[0].scrollHeight);
+		$("#$KEY_errorField").show();
+	}
+
+	function $KEY_errClear() {
+
+		$('#$KEY_errorTable tbody').remove();
+	}
+
+</script>
+<body>
+	<fieldset>
+		<legend><label class='phidinfo'>Data</label></legend>
+		<table>
+			<tr>
+				<td><label>State</label></td>
+				<td><label id='$KEY_modeLabel'>Mode</label></td>
+			</tr>
+			<tr>
+				<td style="text-align:center"><input type="checkbox" onclick="return false;" readonly id='$KEY_state' value="0"></td>
+				<td>
+					<select class='phidinfo' onChange='$KEY_modeChange()' id='$KEY_modeCombo'>
+						<option value="1">NPN</option>
+						<option value="2">PNP</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo' id='$KEY_supplyLabel'>Power Supply:</label></td>
+				<td>
+					<select class='phidinfo' onChange='$KEY_supplyChange()' id='$KEY_supplyCombo'>
+						<option value="1">Off</option>
+						<option value="2">12V</option>
+						<option value="3">24V</option>
+					</select>
+				</td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset class="errorField" id="$KEY_errorField">
+		<legend><label class='phidinfo'>Errors</label></legend>
+		<div id="$KEY_errScroll" class="errScroll">
+			<table class="errorTable" id="$KEY_errorTable">
+				<col width="80">
+				<col width="80">
+				<col width="160">
+				<thead>
+					<tr>
+						<th align='left'><label>Time</label></th>
+						<th align='center'><label>Error #</label></th>
+						<th align='center'><label>Desc</label></th>
+						<th><input type='submit' size='9' class='phidinfo' onclick='$KEY_errClear()' value='Clear'></th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+			</table>
+		</div>
+	</fieldset>
+</body>
+</html>

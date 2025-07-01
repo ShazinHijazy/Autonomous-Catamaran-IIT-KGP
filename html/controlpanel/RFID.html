@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<script>
+	RFIDExample = {}
+
+	var $KEY_phid;
+	var $KEY_errOn = false;
+
+	function $KEY_confirmLock() {
+		if (this.checked) {
+			var yn = window.confirm("If you write to the tag with this option enabled it will be permanently locked. The tag will no longer be writable. Are you sure you want to continue?");
+			if (!yn)
+				$('#$KEY_lock').prop("checked", false);
+		}
+	}
+
+	RFIDExample.setup = function (phid) {
+
+		if (phid.deviceID == phidget22.DeviceID.PN_1023) {
+			$('#$KEY_writeField').hide();
+		}
+		$KEY_lock.onchange = $KEY_confirmLock;
+		$KEY_phid = phid;
+		phid.onTag = $KEY_tagEvent;
+		phid.onTagLost = $KEY_tagLostEvent;
+		phid.onError = $KEY_onError;
+		phid.onPropertyChange = $KEY_propChange;
+
+		if (!phid.getAntennaEnabled())
+			phid.setAntennaEnabled(1);
+	}
+
+	function $KEY_propChange(prop) {
+
+		if (prop === 'AntennaEnabled') {
+			if (this.getAntennaEnabled()) {
+
+				$('#$KEY_disabled').hide();
+				$('#$KEY_enabled').show();
+				$('#$KEY_antButton').val("Disable Antenna");
+				$('#$KEY_writeButton')[0].disabled = false;
+			}
+			else {
+
+				$('#$KEY_enabled').hide();
+				$('#$KEY_disabled').show();
+				$('#$KEY_antButton').val("Enable Antenna");
+				$('#$KEY_writeButton')[0].disabled = true;
+			}
+		}
+
+	}
+
+	function $KEY_tagEvent(tag, protocol) {
+
+		$('#$KEY_TAGDATA').val(tag);
+		switch (protocol) {
+			case 1:
+				$('#$KEY_TAGPROT').val("EM4100");
+				break;
+			case 2:
+				$('#$KEY_TAGPROT').val("ISO11785 FDX-B");
+				break;
+			case 3:
+				$('#$KEY_TAGPROT').val("PhidgetTAG ASCII");
+				break;
+			case 4:
+				$('#$KEY_TAGPROT').val("HID Generic");
+				break;
+			case 5:
+				$('#$KEY_TAGPROT').val("HID H10301");
+				break;
+		}
+
+	}
+
+	function $KEY_tagLostEvent(tag, protocol) {
+
+		$('#$KEY_TAGDATA').val("");
+		$('#$KEY_TAGPROT').val("");
+	}
+
+	async function $KEY_writeTag() {
+
+		var phid = $KEY_phid;
+		var protocol = $('#$KEY_protoCombo').val();
+		var chipset = $('#$KEY_chipsetCombo').val();
+		var tag = $('#$KEY_data').val().toString();
+		var lock = false;
+		if ($('#$KEY_lock')[0].checked)
+			lock = true;
+
+		try {
+			await $KEY_phid.write(tag, protocol, lock, chipset);
+			console.log('Write complete: Data= ' + tag + ' Protocol= ' + protocol + ' Chipset= ' + chipset + ' Lock= ' + lock);
+		} catch (err) {
+			$KEY_onError(err.errorCode, err.message)
+		}
+
+	}
+
+	function $KEY_antenna() {
+
+		var engaged = $KEY_phid.getAntennaEnabled();
+
+		$KEY_phid.setAntennaEnabled(!engaged);
+
+		if (!engaged) {
+
+			$('#$KEY_disabled').hide();
+			$('#$KEY_enabled').show();
+			$('#$KEY_antButton').val("Disable Antenna");
+			$('#$KEY_writeButton')[0].disabled = false;
+		}
+		else {
+
+			$('#$KEY_enabled').hide();
+			$('#$KEY_disabled').show();
+			$('#$KEY_antButton').val("Enable Antenna");
+			$('#$KEY_writeButton')[0].disabled = true;
+		}
+	}
+
+	function $KEY_onError(code, msg) {
+
+		var d = new Date();
+		var h = d.getHours();
+		var m = d.getMinutes();
+		var s = d.getSeconds();
+		var ms = d.getMilliseconds();
+		var tr = $('<tr>');
+
+		tr.append('<td class="errTable"> ' + h + ':' + m + ':' + s + '.' + ms);
+		tr.append('<td class="errTableRed"> 0x' + code.toString(16));
+		tr.append('<td class="errTable">' + msg);
+		$('#$KEY_errorTable').append(tr);
+		$("#$KEY_errScroll").scrollTop($("#$KEY_errScroll")[0].scrollHeight);
+		$("#$KEY_errorField").show();
+	}
+
+	function $KEY_errClear() {
+
+		$('#$KEY_errorTable tbody').remove();
+	}
+
+</script>
+
+<body>
+	<fieldset>
+		<legend><label class='phidinfo'>Antenna</label></legend>
+		<table>
+			<tr>
+				<td>
+					<font color="green"><label id='$KEY_enabled' class='phidinfo'>Antenna Enabled</label></font>
+					<font color="red"><label id='$KEY_disabled' style="display:none;" class='phidinfo'>Antenna
+							Disabled</label></font>
+				</td>
+			</tr>
+			<tr>
+				<td><input type='submit' id='$KEY_antButton' style="width:130px" class='phidinfo'
+						onclick='$KEY_antenna()' value='Disable Antenna'></input></td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset id='$KEY_writeField'>
+		<legend><label class='phidinfo'>Tag Write</label></legend>
+		<table>
+			<tr>
+				<td><label class='phidinfo'>Tag Data</label></td>
+				<td colspan="2"><input type='text' class='phidinfo' id='$KEY_data' size='40' value=''></input></td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>Protocol</label></td>
+				<td>
+					<select class='phidinfo' id='$KEY_protoCombo'>
+						<option value="1">EM4100</option>
+						<option value="2">ISO11785 FDX-B</option>
+						<option value="3">PhidgetTAG ASCII</option>
+						<option value="4">HID Generic</option>
+						<option value="5">HID H10301</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td><label class='phidinfo'>Chipset</label></td>
+				<td>
+					<select class='phidinfo' id='$KEY_chipsetCombo'>
+						<option value="1">T5577</option>
+						<option value="2">EM4305</option>
+					</select>
+				</td>
+				<td><input type='submit' size='9' id='$KEY_writeButton' class='phidinfo' onclick='$KEY_writeTag()'
+						value='Write'></input></td>
+				<td align='left'><input type="checkbox" id='$KEY_lock' name="lock" value="lock"></input><label
+						class='phidinfo'>Lock</label></td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset>
+		<legend><label class='phidinfo'>Tag Read</label></legend>
+		<table>
+			<tr>
+				<td align='left'><label class='phidinfo'>Tag Data</label></td>
+				<td align='left'><label class='phidinfo'>Protocol</label></td>
+			</tr>
+			<tr>
+				<td><input readonly type="text" class='phidinfo' size="40" id='$KEY_TAGDATA' class="phid" value=""></td>
+				<td><input readonly type="text" class='phidinfo' size="14" id='$KEY_TAGPROT' class="phid" value=""></td>
+			</tr>
+		</table>
+	</fieldset>
+	<fieldset class="errorField" id="$KEY_errorField">
+		<legend><label class='phidinfo'>Errors</label></legend>
+		<div id="$KEY_errScroll" class="errScroll">
+			<table class="errorTable" id="$KEY_errorTable">
+				<col width="80">
+				<col width="80">
+				<col width="160">
+				<thead>
+					<tr>
+						<th align='left'><label>Time</label></th>
+						<th align='center'><label>Error #</label></th>
+						<th align='center'><label>Desc</label></th>
+						<th><input type='submit' size='9' class='phidinfo' onclick='$KEY_errClear()' value='Clear'></th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+			</table>
+		</div>
+	</fieldset>
+</body>
+
+</html>

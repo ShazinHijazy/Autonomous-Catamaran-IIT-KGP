@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+<script>
+	DigitalOutputExample = {}
+
+	var $KEY_phid;
+	var $KEY_errOn = false;
+
+	DigitalOutputExample.setup = function(phid) {
+
+		var dutyCycle;
+
+		$KEY_phid = phid;
+		phid.onError = $KEY_onError;
+		phid.onPropertyChange = $KEY_propChange;
+
+		switch(phid.getDeviceID()) {
+			case phidget22.DeviceID.PN_1010_1013_1018_1019:
+			case phidget22.DeviceID.PN_1012:
+			case phidget22.DeviceID.PN_1011:
+			case phidget22.DeviceID.PN_1014:
+			case phidget22.DeviceID.PN_1017:
+			case phidget22.DeviceID.PN_1023:
+			case phidget22.DeviceID.PN_1024:
+			case phidget22.DeviceID.PN_1202_1203:
+				$('#$KEY_ledField').hide();
+				$('#$KEY_dutyLabel').hide();
+				$('#$KEY_dutyCycle').hide();
+				$('#$KEY_zeroLabel').hide();
+				$('#$KEY_hundredLabel').hide();
+				if($KEY_phid.getState())
+					$('#$KEY_state').prop("checked", true);
+				else
+					$('#$KEY_state').prop("checked", false);
+				break;
+			case phidget22.DeviceID.PN_1219__1222:
+				$('#$KEY_dutyLabel').hide();
+				$('#$KEY_dutyCycle').hide();
+				$('#$KEY_zeroLabel').hide();
+				$('#$KEY_hundredLabel').hide();
+				$('#$KEY_ledField').hide();
+				if($KEY_phid.getState())
+					$('#$KEY_state').prop("checked", true);
+				else
+					$('#$KEY_state').prop("checked", false);
+				break;
+			case phidget22.DeviceID.PN_HUB0000:
+			case phidget22.DeviceID.PN_HUB5000:
+			case phidget22.DeviceID.PN_REL1100:
+			case phidget22.DeviceID.PN_OUT1100:
+			case phidget22.DeviceID.PN_REL1000:
+			case phidget22.DeviceID.PN_REL1101:
+			case phidget22.DeviceID.PN_REL2001:
+			case phidget22.DeviceID.PN_REL2002:
+			case phidget22.DeviceID.PN_REL2103:
+			case phidget22.DeviceID.DIGITAL_OUTPUT_PORT:
+				$('#$KEY_ledField').hide();
+				dutyCycle = $KEY_phid.getDutyCycle();
+				$('#$KEY_dutyCycle').val(dutyCycle);
+				if($KEY_phid.getState())
+					$('#$KEY_state').prop("checked", true);
+				else
+					$('#$KEY_state').prop("checked", false);
+				break;
+			case phidget22.DeviceID.PN_LED1000:
+				$("#$KEY_voltCombo option[value='1']").remove();
+				$("#$KEY_voltCombo option[value='2']").remove();
+				$("#$KEY_voltCombo option[value='4']").remove();
+				$("#$KEY_voltCombo option[value='7']").remove();
+				$KEY_LED_class();
+				break;
+			case phidget22.DeviceID.PN_1030:
+			case phidget22.DeviceID.PN_1031:
+			case phidget22.DeviceID.PN_1032:
+				$("#$KEY_voltCombo option[value='3']").remove();
+				$("#$KEY_voltCombo option[value='5']").remove();
+				$("#$KEY_voltCombo option[value='6']").remove();
+				$("#$KEY_voltCombo option[value='8']").remove();
+				$KEY_LED_class();
+				break;
+		}
+	}
+
+	function $KEY_propChange(prop) {
+
+		if(prop === 'DutyCycle') {
+			$('#$KEY_dutyCycle').val(this.getDutyCycle());
+			$('#$KEY_LEDdutyCycle').val(this.getDutyCycle());
+			if(this.getDutyCycle() != 0) {
+				$('#$KEY_state').prop("checked", true);
+				$('#$KEY_LEDstate').prop("checked", true);
+			}
+			else {
+				$('#$KEY_state').prop("checked", false);
+				$('#$KEY_LEDstate').prop("checked", false);
+			}
+		}
+
+		if(prop === 'LEDCurrentLimit')
+			$('#$KEY_current').val(this.getLEDCurrentLimit());
+
+		if(prop === 'LEDForwardVoltage')
+			$('#$KEY_voltCombo').val(this.getLEDForwardVoltage());
+
+		if(prop === 'State') {
+			$('#$KEY_state').prop("checked", this.getState());
+			$('#$KEY_LEDstate').prop("checked", this.getState());
+			if(this.getState()) {
+				$('#$KEY_dutyCycle').val(1);
+				$('#$KEY_LEDdutyCycle').val(1);
+			}
+			else {
+				$('#$KEY_dutyCycle').val(0);
+				$('#$KEY_LEDdutyCycle').val(0);
+			}
+		}
+
+		if(prop === 'DeviceLabel') {
+			$KEY_setLabel('labelValue', this.getDeviceLabel());
+		}
+	}
+
+	function $KEY_setLabel(name, value) {
+
+		var id = '#$KEY_' + name;
+		var div = $(id);
+		div.text(value);
+	}
+
+	function $KEY_LED_class() {
+		var minCurrent = $KEY_phid.getMinLEDCurrentLimit();
+		var maxCurrent = $KEY_phid.getMaxLEDCurrentLimit();
+		var dutyCycle = $KEY_phid.getDutyCycle();
+		$KEY_setLabel('minCurr', minCurrent);
+		$KEY_setLabel('maxCurr', maxCurrent);
+		$('#$KEY_outField').hide();
+		$('#$KEY_current').attr('min', minCurrent);
+		$('#$KEY_current').attr('max', maxCurrent);
+		$('#$KEY_current').attr('step', (maxCurrent - minCurrent) / 100);
+		$('#$KEY_current').val($KEY_phid.getLEDCurrentLimit());
+		$('#$KEY_voltCombo').prop('value', $KEY_phid.getLEDForwardVoltage());
+
+		$('#$KEY_LEDdutyCycle').val(dutyCycle);
+		if(dutyCycle < 0.5)
+			$('#$KEY_LEDstate').prop("checked", false);
+		else
+			$('#$KEY_LEDstate').prop("checked", true);
+	}
+
+	function $KEY_stateChange() {
+		$KEY_phid.setState($('#$KEY_state')[0].checked);
+		if($('#$KEY_state')[0].checked)
+			$('#$KEY_dutyCycle').val(1);
+		else
+			$('#$KEY_dutyCycle').val(0);
+	}
+
+	function $KEY_LEDstateChange() {
+		$KEY_phid.setState($('#$KEY_LEDstate')[0].checked);
+		if($('#$KEY_LEDstate')[0].checked)
+			$('#$KEY_LEDdutyCycle').val(1);
+		else
+			$('#$KEY_LEDdutyCycle').val(0);
+	}
+
+	function $KEY_dutyChange() {
+		$KEY_phid.setDutyCycle($('#$KEY_dutyCycle').val());
+		if($('#$KEY_dutyCycle').val() == 0)
+			$('#$KEY_state').prop("checked", false);
+		else
+			$('#$KEY_state').prop("checked", true);
+	}
+
+	function $KEY_LEDdutyChange() {
+		$KEY_phid.setDutyCycle($('#$KEY_LEDdutyCycle').val());
+		if($('#$KEY_LEDdutyCycle').val() == 0)
+			$('#$KEY_LEDstate').prop("checked", false);
+		else
+			$('#$KEY_LEDstate').prop("checked", true);
+	}
+
+	function $KEY_currentChange() {
+		$KEY_phid.setLEDCurrentLimit($('#$KEY_current').val());
+	}
+
+	function $KEY_voltChange() {
+		$KEY_phid.setLEDForwardVoltage($('#$KEY_voltCombo').val());
+		$("#$KEY_voltCombo option[value='2147483647']").remove();
+	}
+
+	function $KEY_onError(code, msg) {
+
+		var d = new Date();
+		var h = d.getHours();
+		var m = d.getMinutes();
+		var s = d.getSeconds();
+		var ms = d.getMilliseconds();
+		var tr = $('<tr>');
+
+		tr.append('<td class="errTable"> ' + h + ':' + m + ':' + s + '.' + ms);
+		tr.append('<td class="errTableRed"> 0x' + code.toString(16));
+		tr.append('<td class="errTable">' + msg);
+		$('#$KEY_errorTable').append(tr);
+		$("#$KEY_errScroll").scrollTop($("#$KEY_errScroll")[0].scrollHeight);
+		$("#$KEY_errorField").show();
+	}
+
+	function $KEY_errClear() {
+
+		$('#$KEY_errorTable tbody').remove();
+	}
+
+</script>
+<body>
+	<fieldset id="$KEY_outField">
+		<legend><label class='phidinfo'>Digital Output</label></legend>
+		<table>
+			<tr>
+				<td style="text-align:center"><label class='phidinfo' id='$KEY_dutyLabel'>Duty Cycle</label></td>
+				<td style="text-align:center"><label class='phidinfo'>State</label></td>
+			</tr>
+			<tr>
+				<td>
+					<label style="font-size:10px" id='$KEY_zeroLabel'>0%</label>
+					<input type="range" id='$KEY_dutyCycle' step="0.01" min="0" max="1" value="0" onInput="$KEY_dutyChange()">
+					<label style="font-size:10px" id='$KEY_hundredLabel'>100%</label>
+				</td>
+				<td><input type="checkbox" id='$KEY_state' onChange="$KEY_stateChange()" value="0"></td>
+			</tr>
+		</table>
+		<br />
+	</fieldset><br />
+
+	<fieldset id="$KEY_ledField">
+		<legend><label class='phidinfo'>LED Output</label></legend>
+		<table>
+			<tr>
+				<td style="text-align:center"><label class='phidinfo'>Duty Cycle</label></td>
+				<td style="text-align:center"><label class='phidinfo'>State</label></td>
+			</tr>
+			<tr>
+				<td>
+					<label style="font-size:10px">0%</label>
+					<input type="range" id='$KEY_LEDdutyCycle' step="0.01" min="0" max="1" value="0" onInput="$KEY_LEDdutyChange()">
+					<label style="font-size:10px">100%</label>
+				</td>
+				<td style="text-align:center"><input type="checkbox" id='$KEY_LEDstate' onChange="$KEY_LEDstateChange()" value="0"></td>
+			</tr>
+			<tr>
+				<td style="text-align:center"><label class='phidinfo' id='$KEY_currLabel'>Current Limit (Amps)</label></td>
+				<td style="text-align:center"><label class='phidinfo' id='$KEY_voltLabel'>Forward Voltage (V)</label></td>
+			</tr>
+			<tr>
+				<td>
+					<label id='$KEY_minCurr' style="font-size:10px"></label>
+					<input type="range" id='$KEY_current' step="0.01" min="0" max="1" value="0" onInput="$KEY_currentChange()">
+					<label id='$KEY_maxCurr' style="font-size:10px"></label>
+				</td>
+				<td style="text-align:center">
+					<select class='phidinfo' onChange='$KEY_voltChange()' id='$KEY_voltCombo'>
+						<option value="2147483647">---</option>
+						<option value="1">1.7</option>
+						<option value="2">2.75</option>
+						<option value="3">3.2</option>
+						<option value="4">3.9</option>
+						<option value="5">4.0</option>
+						<option value="6">4.8</option>
+						<option value="7">5.0</option>
+						<option value="8">5.6</option>
+					</select>
+				</td>
+			</tr>
+		</table>
+		<br />
+	</fieldset>
+	<fieldset class="errorField" id="$KEY_errorField">
+		<legend><label class='phidinfo'>Errors</label></legend>
+		<div id="$KEY_errScroll" class="errScroll">
+			<table class="errorTable" id="$KEY_errorTable">
+				<col width="80">
+				<col width="80">
+				<col width="160">
+				<thead>
+					<tr>
+						<th align='left'><label>Time</label></th>
+						<th align='center'><label>Error #</label></th>
+						<th align='center'><label>Desc</label></th>
+						<th><input type='submit' size='9' class='phidinfo' onclick='$KEY_errClear()' value='Clear'></th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+			</table>
+		</div>
+	</fieldset>
+</body>
+</html>
