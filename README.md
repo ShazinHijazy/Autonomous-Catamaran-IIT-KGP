@@ -1,7 +1,7 @@
 # Autonomous Catamaran - IIT Kharagpur
 
 <p align="center">
-  <img src="media/autonomous_catamaran_architecture.png" alt="Autonomous Catamaran System Architecture" width="900">
+  <img src="media/banner catamaran.png" alt="Autonomous Catamaran - IIT Kharagpur" width="100%">
 </p>
 
 <h3 align="center">
